@@ -1497,4 +1497,95 @@ const _oldShow=showTab;showTab=function(t){if(t==='yj'&&!YJ.busy)renderYijing();
 renderYijing();
 </script>
 
+<style>
+/* ===== v3 追加樣式 ===== */
+.pop.v3{animation-name:popHold;animation-timing-function:ease-out;animation-fill-mode:forwards;font-size:1.02rem;line-height:1.55;padding:.75rem 1.4rem;white-space:normal;text-align:center;width:max-content;max-width:88vw}
+@keyframes popHold{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}6%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}10%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-130%) scale(.95)}}
+.yjcats.yjm{grid-template-columns:repeat(3,1fr)}
+.v3nums{display:flex;gap:.5rem;margin:.4rem 0}.v3nums input{flex:1;min-width:0;text-align:center;font-size:1.2rem}
+.mhcalc{font-size:.82rem;line-height:1.75}
+</style>
+<script>
+/* ===== v3 追加功能 ===== */
+let V3M='coin',V3MH=null,V3N=['',''],V3LL=JSON.parse(S_get('v3_ll')||'null'),V3WXT=null;
+
+/* ---------- 1. 彈出提示：停耐啲先飄走 ---------- */
+toast=function(msg){const n=document.querySelectorAll('.pop').length,t=document.createElement('div'),dur=Math.min(7,3.5+String(msg).length*.1);
+t.className='pop v3';t.textContent=msg;t.style.animationDuration=dur+'s';t.style.top=(28+n*9)+'%';document.body.appendChild(t);setTimeout(()=>t.remove(),dur*1000+200);};
+
+/* ---------- 2. NPC 讀天氣出錯唔再拖累天氣 ---------- */
+const _v3nl=npcLines;npcLines=function(C){try{return _v3nl(C);}catch(e){console.warn('NPC 天氣句出錯',e);const w=WX;WX=null;try{const L=_v3nl(C);if(w)L.splice(3,0,`🌡️ 外面 ${Math.round(w.t)}°C，濕度 ${w.rh}%。`);return L;}finally{WX=w;}}};
+
+/* ---------- 3. 天氣：兩個來源＋快取＋顯示真正錯誤 ---------- */
+if(typeof setLoc==='function'){const _v3sl=setLoc;setLoc=function(a,b){V3LL=[+a,+b];S_set('v3_ll',JSON.stringify(V3LL));return _v3sl.apply(this,arguments);};}
+function v3LL(){try{if(LOC){if(Array.isArray(LOC)&&isFinite(LOC[0]))return[+LOC[0],+LOC[1]];const k=Object.keys(LOC),g=re=>{const x=k.find(z=>re.test(z)&&LOC[z]!=null&&LOC[z]!==''&&isFinite(+LOC[z]));return x?+LOC[x]:NaN;},a=g(/^la/i),b=g(/^(lo|ln)/i);if(isFinite(a)&&isFinite(b))return[a,b];}}catch(e){}return V3LL;}
+async function v3get(u){const c=window.AbortController?new AbortController():null,tm=setTimeout(()=>c&&c.abort(),12000);
+try{const r=await fetch(u,c?{signal:c.signal}:undefined);if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();}
+catch(e){throw new Error(e.name==='AbortError'?'逾時':(e.message||'網絡錯誤'));}finally{clearTimeout(tm);}}
+async function v3OM(la,lo){const j=await v3get(`https://api.open-meteo.com/v1/forecast?latitude=${la.toFixed(3)}&longitude=${lo.toFixed(3)}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=precipitation_probability,uv_index&daily=temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_probability_max&timezone=auto&forecast_days=2`);
+const c=j.current,H=j.hourly,D=j.daily;if(!c||!H||!D)throw new Error('資料格式唔啱');let i=H.time.findIndex(t=>t.slice(0,13)===String(c.time).slice(0,13));if(i<0)i=0;const nx=H.precipitation_probability.slice(i,i+12).filter(x=>x!=null);
+return{t:c.temperature_2m,feel:c.apparent_temperature,rh:c.relative_humidity_2m,code:c.weather_code,wind:c.wind_speed_10m,uv:H.uv_index[i]||0,uvMax:D.uv_index_max[0]||0,tmax:D.temperature_2m_max[0],tmin:D.temperature_2m_min[0],pop:D.precipitation_probability_max[0]||0,pop12:nx.length?Math.max(...nx):0,src:'Open-Meteo'};}
+const V3WWO={113:0,116:2,119:3,122:3,143:45,248:45,260:45,176:80,263:51,266:53,293:61,296:61,299:63,302:63,305:65,308:65,353:80,356:81,359:82,200:95,386:95,389:95,392:95,395:75,179:71,227:75,230:75,323:71,326:71,329:73,332:73,335:75,338:75,368:85,371:86,182:66,185:66,281:56,284:57,311:66,314:67,317:66,320:71,350:77,362:66,365:67,374:77,377:77};
+async function v3WT(la,lo){const j=await v3get(`https://wttr.in/${la.toFixed(3)},${lo.toFixed(3)}?format=j1`),c=j.current_condition&&j.current_condition[0],d=j.weather&&j.weather[0];if(!c||!d)throw new Error('資料格式唔啱');
+const h=new Date().getHours(),hr=d.hourly,nx=hr.filter(x=>+x.time/100>=h-2).concat(j.weather[1]?j.weather[1].hourly:[]).slice(0,4);
+return{t:+c.temp_C,feel:+c.FeelsLikeC,rh:+c.humidity,code:V3WWO[+c.weatherCode]??3,wind:+c.windspeedKmph,uv:+c.uvIndex||0,uvMax:Math.max(0,...hr.map(x=>+x.uvIndex||0)),tmax:+d.maxtempC,tmin:+d.mintempC,pop:Math.max(0,...hr.map(x=>+x.chanceofrain||0)),pop12:Math.max(0,...nx.map(x=>+x.chanceofrain||0)),src:'wttr.in'};}
+function v3R(){try{renderWeather(CTX);}catch(e){console.error(e);WX=null;WXERR='⚠️ 天氣資料收到，但顯示出錯：'+e.message+'（請將呢句話我知）';try{renderWeather(CTX);}catch(_){}return false;}try{if(CTX&&$('npcText'))npcStart(CTX);}catch(e){}return true;}
+loadWx=async function(){clearTimeout(V3WXT);const ll=v3LL();if(!ll){WXERR='📍 未有位置，請撳重新定位';v3R();return;}
+if(!WX){WXERR='🌤️ 天氣載入中…';v3R();}const errs=[];
+for(const[nm,f]of[['Open-Meteo',v3OM],['wttr.in',v3WT]]){try{const w=await f(ll[0],ll[1]);w._ts=Date.now();WX=w;WXERR='';S_set('v3_wx',JSON.stringify(w));v3R();V3WXT=setTimeout(()=>loadWx(),30*60e3);return;}catch(e){errs.push(nm+'：'+e.message);}}
+const old=JSON.parse(S_get('v3_wx')||'null');
+if(old&&Date.now()-old._ts<6*3600e3){WX=old;WXERR='';v3R();toast('📦 網絡唔穩，暫時顯示 '+new Date(old._ts).toLocaleTimeString('zh-Hant',{hour:'2-digit',minute:'2-digit'})+' 嘅天氣');}
+else{WX=null;WXERR='⚠️ 天氣載入失敗（'+errs.join('；')+'），1 分鐘後自動再試。';v3R();}
+V3WXT=setTimeout(()=>loadWx(),60e3);};
+
+/* ---------- 4. 虧佬指數：「最近一年」改「最近」 ---------- */
+function v3fix(el){if(!el)return;const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode()){const v=n.nodeValue;if(!/一年/.test(v))continue;n.nodeValue=v==='最近一年'?'最近兩至四個星期':v.replace(/最近一年|近一年|過去一年/g,'最近');}}
+const _v3rh=renderHealth;renderHealth=function(){_v3rh.apply(this,arguments);v3fix($('healthBody'));};
+
+/* ---------- 5. 易卦：加入梅花易數 ---------- */
+const V3XT=['','天','澤','火','雷','風','水','山','地'],v3TN=k=>TRIN[V3XT[k]]+V3XT[k],v3Mod=(n,k)=>n%k||k;
+function v3Bits(nm){const i=TRI.indexOf(nm);return[i&1,i>>1&1,i>>2&1];}
+function v3Core(u,l,m,info){const b=[...v3Bits(V3XT[l]),...v3Bits(V3XT[u])];return{u,l,m,info,lines:b.map((x,i)=>i===m-1?(x?9:6):(x?7:8))};}
+function v3Lunar(d){try{const p={};new Intl.DateTimeFormat('en-u-ca-chinese',{year:'numeric',month:'numeric',day:'numeric'}).formatToParts(d).forEach(x=>p[x.type]=x.value);
+const y=parseInt(p.relatedYear||p.year),mo=parseInt(String(p.month).match(/\d+/)),da=parseInt(String(p.day).match(/\d+/));if(!y||!mo||!da)return null;
+return{yb:y>1000?((y-4)%12+12)%12:((y-1)%12+12)%12,mo,da,leap:/bis|閏|闰/i.test(p.month)};}catch(e){return null;}}
+function v3TimeInfo(){const d=new Date(),hz=Math.floor((d.getHours()+1)/2)%12,d2=d.getHours()>=23?new Date(d.getTime()+3600e3):d,L=v3Lunar(d2);
+return L?{...L,hz,ok:true}:{yb:((d2.getFullYear()-4)%12+12)%12,mo:d2.getMonth()+1,da:d2.getDate(),hz,ok:false,leap:false};}
+function v3MhTime(){const T=v3TimeInfo(),s=T.yb+1+T.mo+T.da,s2=s+T.hz+1,u=v3Mod(s,8),l=v3Mod(s2,8),m=v3Mod(s2,6);
+return v3Core(u,l,m,{type:'time',ok:T.ok,calc:`${T.ok?'農曆':'（西曆代替）'}${ZHI[T.yb]}年＝${T.yb+1}、${T.leap?'閏':''}${T.mo}月＝${T.mo}、${T.da}日＝${T.da}、${ZHI[T.hz]}時＝${T.hz+1}<br>上卦：${T.yb+1}+${T.mo}+${T.da}＝${s}，÷8 餘 ${u} → ${v3TN(u)}<br>下卦：${s}+${T.hz+1}＝${s2}，÷8 餘 ${l} → ${v3TN(l)}<br>動爻：${s2}，÷6 餘 ${m} → ${YAON[m-1]}`});}
+function v3MhNum(a,b){const hz=Math.floor((new Date().getHours()+1)/2)%12,s=a+b+hz+1,u=v3Mod(a,8),l=v3Mod(b,8),m=v3Mod(s,6);
+return v3Core(u,l,m,{type:'num',ok:true,calc:`第一個數 ${a}，÷8 餘 ${u} → 上卦 ${v3TN(u)}<br>第二個數 ${b}，÷8 餘 ${l} → 下卦 ${v3TN(l)}<br>動爻：${a}+${b}+${ZHI[hz]}時(${hz+1})＝${s}，÷6 餘 ${m} → ${YAON[m-1]}`});}
+const V3SH={木:'火',火:'土',土:'金',金:'水',水:'木'},V3KE={木:'土',土:'水',水:'火',火:'金',金:'木'};
+function v3Rel(t,y){return t===y?['體用比和','👍 吉：同氣連枝，順利、有人幫']:V3SH[y]===t?['用生體','✅ 大吉：形勢主動幫你，事半功倍']:V3KE[t]===y?['體剋用','🙂 小吉：你控制到局面，可成事但要出力']:V3SH[t]===y?['體生用','⚠️ 小凶：要你付出多，易耗神破財']:['用剋體','⛔ 凶：形勢壓住你，宜守不宜攻'];}
+function v3MhBox(mh){const b=mh.lines.map(v=>v===7||v===9?1:0),m=mh.m,tri=a=>TRI[a[0]+2*a[1]+4*a[2]],lo=tri(b.slice(0,3)),up=tri(b.slice(3)),hu=HEX.find(h=>h[0]===tri(b.slice(2,5))&&h[1]===tri(b.slice(1,4))),b2=b.slice();b2[m-1]=1-b2[m-1];
+const low=m<=3,ti=low?up:lo,yo=low?lo:up,yc=low?tri(b2.slice(0,3)):tri(b2.slice(3)),tE=TRIEL[ti],yE=TRIEL[yo],cE=TRIEL[yc],r1=v3Rel(tE,yE),r2=v3Rel(tE,cE);
+return`<div class="box mhcalc">🌸 <b>梅花易數・${mh.info.type==='time'?'時間起卦':'數字起卦'}</b><br>${mh.info.calc}<br><small class="sub">（整除就當 8 或 6）</small>${mh.info.ok?'':'<br><small class="sub">⚠️ 你部機唔支援農曆換算，今次用咗西曆日期代替。</small>'}</div>
+<div class="box">⚖️ <b>體用分析（梅花易最重視）</b><br>🧍 體卦＝你自己：${TRIN[ti]}${ti}・<span class="wx${tE}">${tE}</span><br>🌍 用卦＝件事／對方：${TRIN[yo]}${yo}・<span class="wx${yE}">${yE}</span><br>➡️ 而家：<b>${r1[0]}</b>　${r1[1]}<br>🏁 結局（用卦變成 ${TRIN[yc]}${yc}・<span class="wx${cE}">${cE}</span>）：<b>${r2[0]}</b>　${r2[1]}</div>
+${hu?`<div class="box">🔍 <b>互卦「${hu[2]}」＝過程中會遇到：</b>${hu[5]}</div>`:''}`;}
+const V3MS=[['coin','🪙','三錢法'],['time','🌸','梅花・時間'],['num','🔢','梅花・數字']],V3BTN={coin:'🪙 開始起卦',time:'🌸 用而家時間起卦',num:'🔢 用數字起卦'};
+const V3HINT={time:'🌸 <b>梅花易數・時間起卦</b>（宋代邵康節）：用「而家」嘅農曆年、月、日、時辰計出一個卦，一撳即成。講求「心動即占」——諗起件事嗰一刻就係答案。<b>同一個時辰內起卦，結果會一樣。</b>',num:'🔢 <b>梅花易數・數字起卦</b>：心入面諗住問題，憑直覺講出兩個數字（或者用眼前見到嘅數字，例如時鐘、車牌、門牌），再加埋時辰計出卦。'};
+function v3Pick(m){const q=$('yjq');if(q)YJ.q=q.value;V3M=m;renderYijing();}
+function v3Start(){const q=$('yjq');YJ.q=(q?q.value:'').trim();if(V3M==='coin'){V3MH=null;return yjStart();}
+let r;if(V3M==='time')r=v3MhTime();else{const a=parseInt(V3N[0]),b=parseInt(V3N[1]);if(!(a>0&&b>0)){toast('🔢 請輸入兩個正整數');return;}r=v3MhNum(a,b);}
+const hist=JSON.parse(S_get('bazi_yj')||'[]');if(YJ.q&&hist.some(x=>x.q===YJ.q&&x.d===dk())&&!confirm('你今日已經問過同一件事喇。易經講「一事不二占」，第一次嘅答案最值得參考。\n仍然要再問？'))return;
+V3MH=r;YJ.lines=r.lines.slice();YJ.started=true;YJ.last=null;YJ.busy=false;yjSave();renderYijing();afterRender($('pg-yj'));confetti();toast('🌸 梅花卦已成！');window.scrollTo({top:0,behavior:'smooth'});}
+const _v3ry=renderYijing;renderYijing=function(){_v3ry();const box=$('yjBody'),p=box&&box.querySelector('.panel');if(!p)return;const hint=p.querySelector('.hint');
+if(!YJ.started){if(hint&&V3HINT[V3M])hint.innerHTML=V3HINT[V3M];
+if(hint)hint.insertAdjacentHTML('afterend',`<div class="sub" style="margin:.3rem 0">⓪ 揀起卦方法：</div><div class="yjcats yjm">${V3MS.map(m=>`<button class="ycat${V3M===m[0]?' on':''}" onclick="v3Pick('${m[0]}')">${m[1]}<br>${m[2]}</button>`).join('')}</div>`);
+const tip=p.querySelector('.box');
+if(V3M==='num'&&tip)tip.insertAdjacentHTML('beforebegin',`<div class="sub" style="margin:.7rem 0 .2rem">③ 憑直覺寫低兩個數字：</div><div class="v3nums"><input id="v3n1" type="number" inputmode="numeric" min="1" placeholder="第一個數" value="${V3N[0]}" oninput="V3N[0]=this.value"><input id="v3n2" type="number" inputmode="numeric" min="1" placeholder="第二個數" value="${V3N[1]}" oninput="V3N[1]=this.value"></div>`);
+if(V3M==='time'&&tip){const T=v3TimeInfo();tip.insertAdjacentHTML('beforebegin',`<div class="box">🕰️ 而家係：${T.ok?'農曆':'西曆'}${ZHI[T.yb]}年 ${T.leap?'閏':''}${T.mo}月${T.da}日・${ZHI[T.hz]}時</div>`);}
+const sb=p.querySelector('.btn.big');if(sb){sb.setAttribute('onclick','v3Start()');sb.textContent=V3BTN[V3M];}}
+else if(YJ.lines.length===6&&V3MH){const hp=p.querySelector('.hexpair');if(hp)hp.insertAdjacentHTML('afterend',v3MhBox(V3MH));}
+const hist=JSON.parse(S_get('bazi_yj')||'[]');box.querySelectorAll('.quest').forEach((el,i)=>{const r=hist[i],s=el.querySelector('.qt small');if(r&&r.m&&r.m!=='coin'&&s)s.textContent+='・🌸梅花';});};
+const _v3ys=yjSave;yjSave=function(){_v3ys();const h=JSON.parse(S_get('bazi_yj')||'[]');if(h[0]){h[0].m=V3MH?V3M:'coin';h[0].mh=V3MH;S_set('bazi_yj',JSON.stringify(h));}};
+const _v3yr=yjReset;yjReset=function(){V3MH=null;_v3yr();};
+const _v3yl=yjLoad;yjLoad=function(i){const r=JSON.parse(S_get('bazi_yj')||'[]')[i];V3MH=r&&r.mh||null;if(V3MH)V3M=r.m;_v3yl(i);};
+
+/* ---------- 啟動 ---------- */
+renderYijing();
+if(v3LL())loadWx();
+setTimeout(()=>{if(!WX||WXERR)loadWx();},15000);
+</script>
+
 </body></html>
