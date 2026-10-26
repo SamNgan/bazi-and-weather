@@ -1,0 +1,1500 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0c0920">
+<title>五行命盤儀 RPG</title>
+<script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.min.js" onerror="window.__noLunar=true"></script>
+<style>
+:root{--bg:#0c0920;--p1:#1e1842;--p2:#151032;--line:#3b3176;--gold:#f6c86a;--gold2:#fff0c2;--ink:#f3eeff;--sub:#a99fd0;
+--wood:#4ade80;--fire:#ff6b5b;--earth:#e6a95c;--metal:#ffd95e;--water:#55b9ff;--good:#43e08a;--warn:#ffc04d;--bad:#ff5577;--r:14px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{margin:0;min-height:100vh;color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;line-height:1.7;
+background:radial-gradient(ellipse at 15% 0%,#2f2068 0%,transparent 55%),radial-gradient(ellipse at 95% 100%,#0f3a5e 0%,transparent 50%),var(--bg);background-attachment:fixed}
+#fx{position:fixed;inset:0;z-index:0;pointer-events:none}
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding:.45rem .8rem;background:rgba(14,10,36,.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:2px solid var(--line);box-shadow:0 2px 0 rgba(246,200,106,.25)}
+.logo{display:flex;align-items:center;gap:.45rem}
+.logo svg{width:2.1rem;height:2.1rem;filter:drop-shadow(0 0 6px var(--gold))}
+.logo b{font-size:1.05rem;letter-spacing:.12em;background:linear-gradient(90deg,var(--gold),var(--gold2),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200%;animation:shimTxt 4s linear infinite}
+.logo small{display:block;font-size:.6rem;color:var(--sub);line-height:1.1}
+#hud{display:flex;gap:.55rem;align-items:center;flex-wrap:wrap;font-size:.72rem;font-weight:800;margin-left:auto}
+#hud .lv{background:linear-gradient(180deg,var(--gold),#c8963a);color:#2a1a00;border-radius:.35rem;padding:0 .45rem}
+#hud .hb{display:flex;align-items:center;gap:.25rem}#hud .hb .bar{width:3.6rem;height:.55rem}
+.tbtns{display:flex;gap:.3rem}
+.ib{font:inherit;font-size:.8rem;cursor:pointer;color:var(--ink);background:var(--p1);border:1.5px solid var(--line);border-radius:.5rem;padding:.2rem .5rem}
+main{position:relative;z-index:1;max-width:52rem;margin:0 auto;padding:1rem .8rem 7rem}
+.page{display:none}.page.on{display:block;animation:pageIn .45s ease-out}
+.panel{position:relative;background:linear-gradient(180deg,rgba(36,28,78,.94),rgba(20,15,48,.95));border:2px solid var(--line);border-radius:var(--r);padding:1rem;margin:0 0 1.1rem;box-shadow:inset 0 0 0 1px rgba(246,200,106,.12),0 10px 28px rgba(0,0,0,.45)}
+.panel::before,.panel::after{content:"";position:absolute;width:10px;height:10px;background:var(--gold);transform:rotate(45deg);top:-6px;box-shadow:0 0 8px var(--gold)}
+.panel::before{left:18px}.panel::after{right:18px}
+.panel.enter{animation:fadeUp .55s both}
+.ptitle{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;font-weight:900;font-size:1.06rem;margin:0 0 .6rem;color:var(--gold);text-shadow:0 0 10px rgba(246,200,106,.35);letter-spacing:.05em}
+.hint{font-size:.82rem;color:#cfe8ff;background:rgba(85,185,255,.08);border:1px dashed rgba(85,185,255,.4);border-radius:.6rem;padding:.35rem .6rem;margin:.2rem 0 .7rem}
+.hint::before{content:"💡 "}
+.sub{color:var(--sub);font-size:.8rem}
+.btn{font:inherit;cursor:pointer;color:#2a1a00;font-weight:900;background:linear-gradient(180deg,#ffe29a,#e8a93e);border:2px solid #ffefc0;border-radius:.7rem;padding:.4rem 1rem;box-shadow:0 4px 0 #8a5a14,0 0 16px rgba(246,200,106,.35);transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 0 0 #8a5a14}
+.btn.big{font-size:1.1rem;padding:.6rem 1.4rem;animation:btnGlow 2s ease-in-out infinite}
+.btn2{font:inherit;cursor:pointer;color:var(--ink);background:linear-gradient(180deg,#2e2670,#1c1648);border:2px solid var(--line);border-radius:.6rem;padding:.3rem .8rem;box-shadow:0 3px 0 #0a0720}
+.btn2:active{transform:translateY(3px);box-shadow:none}
+.mini{font-size:.75rem;padding:.1rem .55rem}
+label{font-size:.85rem;color:var(--sub)}
+input,select{font:inherit;background:#120d2c;color:var(--ink);border:1.5px solid var(--line);border-radius:.45rem;padding:.3rem .5rem;max-width:100%}
+input[type=date],input[type=time]{color-scheme:dark}
+.grid{display:flex;flex-wrap:wrap;gap:.7rem}.grid>div{display:flex;flex-direction:column;gap:.15rem}
+.wx木{color:var(--wood)}.wx火{color:var(--fire)}.wx土{color:var(--earth)}.wx金{color:var(--metal)}.wx水{color:var(--water)}
+.chip{display:inline-block;font-size:.76rem;border:1.5px solid var(--line);border-radius:99px;padding:.02rem .55rem;margin:.12rem .12rem;background:rgba(0,0,0,.25)}
+.chip.on{border-color:var(--gold);color:var(--gold);font-weight:800}
+.chip.pot{border-color:var(--warn);color:var(--warn);font-weight:800}
+.lv0{color:var(--good)!important;border-color:var(--good)!important}.lv1{color:var(--warn)!important;border-color:var(--warn)!important}.lv2{color:var(--bad)!important;border-color:var(--bad)!important}
+.dot{display:inline-block;width:.8rem;height:.8rem;border-radius:50%;vertical-align:middle}
+.d0{background:var(--good);box-shadow:0 0 8px var(--good)}.d1{background:var(--warn);box-shadow:0 0 8px var(--warn)}.d2{background:var(--bad);box-shadow:0 0 10px var(--bad);animation:pulse 1.1s infinite}
+.bar{height:.7rem;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;display:flex;border:1px solid rgba(255,255,255,.08)}
+.bar>i{display:block;height:100%;width:0;transition:width 1.3s cubic-bezier(.2,.9,.3,1);position:relative;overflow:hidden}
+.bar>i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:translateX(-100%);animation:barShine 2.6s infinite}
+.row{display:flex;gap:.9rem;flex-wrap:wrap;align-items:center}
+.box{padding:.45rem .65rem;border-left:3px solid var(--gold);margin:.4rem 0;font-size:.9rem;background:rgba(0,0,0,.22);border-radius:.4rem}
+.dim{opacity:.42}
+.trig{font-size:.72rem;color:var(--bad);border:1px solid var(--bad);border-radius:99px;padding:0 .4rem;margin-left:.3rem;white-space:nowrap;animation:pulse 1.6s infinite}
+.tag{font-size:.7rem;border-radius:99px;padding:0 .45rem;margin-right:.3rem;border:1px solid var(--gold);color:var(--gold)}
+.tag.p{border-color:var(--warn);color:var(--warn)}
+details{margin:.35rem 0}summary{cursor:pointer;color:var(--gold);font-size:.86rem}
+.statrow{display:flex;align-items:center;gap:.5rem;font-size:.84rem;margin:.25rem 0}.statrow .bar{flex:1}
+/* 底部選單 */
+.tabbar{position:fixed;left:50%;bottom:calc(.6rem + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:30;display:flex;gap:.1rem;padding:.3rem;background:rgba(20,15,48,.93);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:2px solid var(--line);border-radius:1.2rem;box-shadow:0 8px 30px rgba(0,0,0,.6),inset 0 0 0 1px rgba(246,200,106,.2);width:min(97vw,34rem)}
+.tabbar button{flex:1;font:inherit;background:none;border:none;color:var(--sub);cursor:pointer;display:flex;flex-direction:column;align-items:center;font-size:.64rem;padding:.2rem 0;border-radius:.8rem;transition:all .25s}
+.tabbar button span{font-size:1.35rem;line-height:1.25;transition:transform .3s}
+.tabbar button.on{color:var(--gold);background:linear-gradient(180deg,rgba(246,200,106,.22),rgba(246,200,106,.04));box-shadow:inset 0 0 12px rgba(246,200,106,.35)}
+.tabbar button.on span{animation:bobBig 1.6s ease-in-out infinite}
+/* NPC */
+.npc{display:flex;gap:.7rem;align-items:flex-start}
+.npcav{width:3.8rem;height:3.8rem;border-radius:50%;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:2.1rem;background:radial-gradient(#3b2c7a,#160f3a);box-shadow:0 0 16px rgba(246,200,106,.5);animation:bob 2.4s infinite;flex-shrink:0}
+.npcbox{flex:1;background:rgba(0,0,0,.3);border:1.5px solid var(--line);border-radius:.8rem;padding:.45rem .75rem}
+.npcname{color:var(--gold);font-size:.82rem;font-weight:900}
+.npctext{min-height:3rem;font-size:.95rem;cursor:pointer}
+.npctext::after{content:"▼";font-size:.6rem;margin-left:.3rem;color:var(--gold);animation:blink 1s infinite}
+/* 運籤 */
+.fortune{perspective:900px;width:9rem;height:12.5rem;cursor:pointer;flex-shrink:0;margin:0 auto}
+.fin{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.3,1.4,.5,1)}
+.fortune.flip .fin{transform:rotateY(180deg)}
+.ff,.fb{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid var(--gold);padding:.6rem;text-align:center}
+.ff{background:repeating-linear-gradient(45deg,#3a2a6e 0 10px,#2a1f58 10px 20px);box-shadow:0 0 18px rgba(246,200,106,.45);animation:cardPulse 2s infinite}
+.ff b{font-size:2.6rem;animation:spinSlow 6s linear infinite;display:inline-block}
+.fb{transform:rotateY(180deg);background:linear-gradient(170deg,#43300f,#1c1438);box-shadow:0 0 22px rgba(246,200,106,.6)}
+.fb .fl{font-size:2.1rem;font-weight:900;color:var(--gold);text-shadow:0 0 12px var(--gold)}
+/* 徽章 */
+.emb{width:7.5rem;height:7.5rem;flex-shrink:0;filter:drop-shadow(0 0 14px rgba(246,200,106,.25))}
+.emb.big{width:10rem;height:10rem}
+.spin{transform-origin:60px 60px;animation:spin 18s linear infinite}
+.spinr{transform-origin:60px 60px;animation:spin 11s linear infinite reverse}
+.sway{transform-origin:60px 96px;animation:sway 3s ease-in-out infinite}
+.flick{transform-origin:60px 98px;animation:flick .9s ease-in-out infinite alternate}.flick.d2{animation-duration:.55s}
+.rise{animation:rise 4s ease-in-out infinite alternate}
+.shine{animation:shine 2.8s ease-in-out infinite}
+.wave{animation:wave 3s linear infinite}.wave.w2{animation-duration:2s;animation-direction:reverse}
+.bob{animation:bob 2s ease-in-out infinite}
+.leaf{animation:leaf 4s linear infinite}.leaf.l2{animation-delay:2s}
+.spark{animation:sparkA 1.6s ease-out infinite}
+.title{display:inline-block;font-size:1.25rem;font-weight:900;letter-spacing:.12em;padding:.1rem .8rem;border:2px solid var(--gold);border-radius:.5rem;color:var(--gold);background:rgba(246,200,106,.08);animation:glow 2.6s ease-in-out infinite}
+.title2{display:inline-block;font-size:.82rem;font-weight:800;border:1.5px solid #c77dff;color:#e3c6ff;border-radius:99px;padding:.02rem .65rem;margin:.3rem 0}
+.tsub{display:inline-block;font-size:.72rem;color:var(--sub);border:1px dashed var(--sub);border-radius:99px;padding:0 .5rem;margin:.1rem}
+.buffs{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.35rem}
+.buff{font-size:.7rem;border:1.5px solid var(--line);border-radius:.4rem;padding:0 .35rem;background:rgba(0,0,0,.3);animation:fadeUp .5s both}
+.buff.good{border-color:var(--good);color:var(--good)}.buff.warn{border-color:var(--warn);color:var(--warn)}.buff.bad{border-color:var(--bad);color:var(--bad)}
+/* 任務 */
+.quest{display:flex;align-items:center;gap:.5rem;padding:.45rem .65rem;margin:.3rem 0;border:1.5px solid var(--line);border-radius:.6rem;background:rgba(0,0,0,.25);cursor:pointer;color:var(--ink);font-size:.9rem;transition:all .25s}
+.quest:hover{border-color:var(--gold);transform:translateX(3px)}
+.quest input{width:1.15rem;height:1.15rem;accent-color:#f6c86a}
+.quest .qt{flex:1}.quest .qx{font-size:.68rem;color:var(--gold);font-weight:900}
+.quest.done{opacity:.55;border-color:var(--good)}.quest.done .qt{text-decoration:line-through}
+.floatxp{position:fixed;z-index:99;font-weight:900;color:var(--gold);pointer-events:none;animation:floatUp 1.1s ease-out forwards;text-shadow:0 0 8px var(--gold)}
+/* 風險盾 */
+.shields{display:grid;grid-template-columns:repeat(auto-fit,minmax(14.5rem,1fr));gap:.6rem}
+.shield{border:2px solid var(--line);border-radius:.8rem;padding:.55rem .7rem;background:rgba(0,0,0,.25);position:relative;overflow:hidden}
+.shield.L2{border-color:var(--bad);box-shadow:0 0 14px rgba(255,85,119,.25)}
+.shield.L0{border-color:rgba(67,224,138,.5)}
+.shield .sh{display:flex;align-items:center;gap:.4rem;font-weight:900}
+.shield .shi{font-size:1.5rem;animation:bob 2.6s infinite}
+.shield p{margin:.3rem 0 0;font-size:.85rem}
+.enc{color:var(--good)}
+/* 轉盤 */
+.wheel{width:min(100%,17.5rem);display:block;margin:0 auto}
+.segnow{animation:segp 1.4s ease-in-out infinite}
+.needle{transform-origin:120px 120px;transform:rotate(0deg);transition:transform 1.8s cubic-bezier(.3,1.5,.5,1)}
+.radar{width:min(100%,17rem);display:block;margin:0 auto}
+.grow{transform-origin:120px 115px;animation:grow 1.3s cubic-bezier(.2,1.5,.4,1) both}.g2{animation-delay:.35s}
+.cyc{width:min(100%,22rem);display:block;margin:0 auto}
+.flowline{animation:dash 1.2s linear infinite}
+.ringp{animation:ringp 1.6s ease-in-out infinite}
+.nodeIn{animation:fadeUp .6s both}
+/* 七日 */
+.strip{display:flex;gap:.4rem;overflow-x:auto;padding:.3rem 0 .5rem}
+.dcard{min-width:4.3rem;text-align:center;border:2px solid var(--line);border-radius:.7rem;padding:.35rem .15rem;font-size:.8rem;background:rgba(0,0,0,.25);animation:fadeUp .5s both}
+.dcard.now{border-color:var(--gold);box-shadow:inset 0 0 0 2px var(--gold)}
+/* 十神卡 */
+.gods{display:grid;grid-template-columns:repeat(auto-fill,minmax(9.3rem,1fr));gap:.65rem}
+.gcard{position:relative;cursor:pointer;border-radius:12px;padding:.7rem .5rem .55rem;text-align:center;background:linear-gradient(170deg,#2a2160,#140f33);border:2.5px solid var(--line);transition:transform .2s;overflow:hidden;animation:fadeUp .5s both}
+.gcard:hover{transform:translateY(-4px) rotate(-.6deg)}
+.gcard .gic{font-size:2.3rem;display:inline-block;animation:bob 2.4s ease-in-out infinite}
+.gcard .gn{font-weight:900;font-size:1.08rem}
+.gcard .gk{font-size:.72rem;color:var(--sub)}
+.gcard .bar{margin-top:.35rem;height:.5rem}
+.rar{position:absolute;top:.3rem;left:.35rem;font-size:.62rem;font-weight:900;padding:0 .35rem;border-radius:.3rem;background:rgba(0,0,0,.45)}
+.gtoday{position:absolute;top:.3rem;right:.35rem;font-size:.62rem;color:var(--warn);font-weight:900;animation:pulse 1.4s infinite}
+.r-SSR{border-color:transparent;background:linear-gradient(170deg,#3e2c10,#1a1030) padding-box,linear-gradient(120deg,#ff5a8a,#ffd95e,#4ade80,#55b9ff,#c77dff,#ff5a8a) border-box;background-size:100% 100%,300% 300%;animation:rainbow 4s linear infinite,fadeUp .5s both}
+.r-SSR .rar{color:#ffd95e}
+.r-SR{border-color:#c77dff;box-shadow:0 0 14px rgba(199,125,255,.45)}.r-SR .rar{color:#e3c6ff}
+.r-R{border-color:#55b9ff}.r-R .rar{color:#9fd6ff}
+.r-N{border-color:#6b6390}.r-N .rar{color:#bbb}
+.r-L{opacity:.5;filter:grayscale(.85)}
+.r-SSR::after,.r-SR::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);animation:cardShine 3s infinite}
+/* Modal */
+.modal{position:fixed;inset:0;z-index:100;background:rgba(5,3,15,.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:1rem}
+.modal.on{display:flex}
+.mbox{max-width:32rem;width:100%;max-height:85vh;overflow:auto;background:linear-gradient(180deg,#2a2163,#151033);border:2px solid var(--gold);border-radius:1rem;padding:1rem 1.1rem;box-shadow:0 0 40px rgba(246,200,106,.35);animation:popIn .4s cubic-bezier(.2,1.5,.4,1)}
+.mic{font-size:3.4rem;text-align:center;animation:bob 2s infinite;filter:drop-shadow(0 0 14px var(--gold))}
+/* 問卷 */
+.seg{display:flex;gap:.3rem;margin-bottom:.9rem;background:rgba(0,0,0,.3);padding:.25rem;border-radius:.8rem;border:1.5px solid var(--line)}
+.seg button{flex:1;font:inherit;font-size:.85rem;cursor:pointer;color:var(--sub);background:none;border:none;border-radius:.6rem;padding:.35rem .2rem;font-weight:800}
+.seg button.on{color:#2a1a00;background:linear-gradient(180deg,#ffe29a,#e8a93e);box-shadow:0 0 12px rgba(246,200,106,.5)}
+.qcard{text-align:center}
+.qicon{font-size:3rem;display:inline-block;animation:bob 2s infinite}
+.qtext{font-size:1.18rem;font-weight:900;margin:.5rem 0 1rem;min-height:3.4rem}
+.qopts{display:grid;gap:.45rem;max-width:24rem;margin:0 auto}
+.qopt{font:inherit;cursor:pointer;color:var(--ink);background:linear-gradient(180deg,#2b2366,#1b1546);border:2px solid var(--line);border-radius:.8rem;padding:.55rem .8rem;font-size:1rem;display:flex;align-items:center;gap:.7rem;transition:all .15s;text-align:left}
+.qopt:hover{border-color:var(--gold);transform:translateX(5px)}
+.qopt.sel{border-color:var(--gold);background:linear-gradient(180deg,#5a4520,#2b2050)}
+.qopt span{font-size:1.4rem}
+.qanim{animation:slideIn .35s ease-out}
+.tzcard{text-align:center;border:2px solid var(--gold);border-radius:1rem;padding:.8rem;background:radial-gradient(circle at 50% 0%,rgba(246,200,106,.18),transparent 70%);margin:.5rem 0}
+.tzcard .tzi{font-size:3.6rem;display:inline-block;animation:bobBig 2.2s infinite;filter:drop-shadow(0 0 16px var(--gold))}
+/* 天氣 */
+.wxloc{display:flex;gap:.35rem;align-items:center;flex-wrap:wrap;font-size:.86rem;margin-bottom:.6rem}
+.wxtop{display:flex;gap:.7rem;flex-wrap:wrap}
+.wxscene{position:relative;flex:1;min-width:14rem;height:10rem;border-radius:.9rem;overflow:hidden;background:linear-gradient(#4f9be8,#bfe3ff);border:2px solid var(--line)}
+.wxscene.cloudy{background:linear-gradient(#7d93ab,#cdd8e3)}.wxscene.rainy{background:linear-gradient(#3e4b5e,#8e9cad)}
+.wxscene.night{background:linear-gradient(#0a1030,#2b3566)}
+.wxscene .big{position:absolute;left:.8rem;bottom:.4rem;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.5);font-weight:900;font-size:2.8rem;line-height:1}
+.wxscene .desc{position:absolute;left:.8rem;top:.5rem;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6);font-size:.95rem;font-weight:800}
+.sun{position:absolute;top:.8rem;right:1.6rem;width:3rem;height:3rem;border-radius:50%;background:#ffd34d;box-shadow:0 0 26px 10px rgba(255,211,77,.65)}
+.rays{position:absolute;top:-1.1rem;right:-.3rem;width:6.8rem;height:6.8rem;border-radius:50%;background:repeating-conic-gradient(rgba(255,230,140,.5) 0 8deg,transparent 8deg 24deg);animation:spin 22s linear infinite}
+.moon{position:absolute;top:.9rem;right:1.8rem;width:2.6rem;height:2.6rem;border-radius:50%;box-shadow:-.65rem .28rem 0 0 #fdf3c4;filter:drop-shadow(0 0 8px #fdf3c4)}
+.star{position:absolute;width:3px;height:3px;background:#fff;border-radius:50%;animation:twinkle 2s infinite}
+.cloud{position:absolute;width:4.6rem;height:1.5rem;background:#fff;border-radius:99px;opacity:.92;animation:drift 22s linear infinite}
+.cloud::before{content:"";position:absolute;width:2.2rem;height:2.2rem;background:inherit;border-radius:50%;top:-1.1rem;left:.9rem}
+.wxscene.rainy .cloud{background:#c9d0d9}
+.drop{position:absolute;top:-1rem;width:2px;height:1rem;background:rgba(230,242,255,.9);animation:fall .8s linear infinite}
+.flake{position:absolute;top:-1rem;color:#fff;font-size:.85rem;animation:fall 4s linear infinite}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;animation:flash 6s infinite}
+.fog{position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent);animation:fogmove 9s ease-in-out infinite alternate}
+.wxstats{flex:1.3;min-width:15rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(6.6rem,1fr));gap:.4rem}
+.wst{border:2px solid var(--line);border-radius:.7rem;padding:.3rem .55rem;background:rgba(0,0,0,.28);display:flex;flex-direction:column;animation:fadeUp .5s both}
+.wst span{font-size:.72rem;color:var(--sub)}.wst b{font-size:1.35rem;line-height:1.2}.wst small{font-size:.66rem;color:var(--sub)}
+.uvmeter{position:relative;height:.65rem;border-radius:99px;margin:.7rem 0 .25rem;background:linear-gradient(90deg,#3f9d5a 0 25%,#d9b42b 25% 50%,#e8812b 50% 66%,#cf4b3c 66% 91%,#8e44ad 91%)}
+.uvmeter i{position:absolute;top:-.38rem;width:.35rem;height:1.4rem;background:#fff;border-radius:2px;transform:translateX(-50%);box-shadow:0 0 8px #fff;animation:pulse 1.6s infinite}
+.hr{min-width:3.5rem;text-align:center;border:2px solid var(--line);border-radius:.6rem;padding:.25rem .1rem;font-size:.74rem;background:rgba(0,0,0,.25)}
+.hr .ic{font-size:1.2rem}
+.gears{display:flex;gap:.55rem;flex-wrap:wrap;justify-content:center}
+.gear{width:5.7rem;text-align:center;border:2px solid var(--line);border-radius:.8rem;padding:.45rem .2rem .3rem;background:linear-gradient(180deg,#2a2160,#16113a);position:relative;overflow:hidden;font-size:.72rem;animation:fadeUp .5s both}
+.gear.on{border-color:var(--gold);box-shadow:0 0 12px rgba(246,200,106,.35)}
+.gear svg{width:3.3rem;height:3.3rem;animation:bob 2.2s ease-in-out infinite;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.gear.off{opacity:.33}.gear.off svg{animation:none}
+.gear.on::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.25),transparent);animation:cardShine 3.2s infinite}
+.gear b{display:block;color:var(--gold)}
+.gear.ban{border-color:var(--bad)}.gear.ban::before{content:"✖";position:absolute;top:.6rem;left:50%;transform:translateX(-50%);font-size:2.6rem;color:var(--bad);text-shadow:0 0 8px #000;z-index:2}
+.swatch{display:inline-flex;align-items:center;gap:.35rem;margin:.2rem .3rem .2rem 0;font-size:.82rem}
+.swatch i{width:1.4rem;height:1.4rem;border-radius:.35rem;border:2px solid #fff3;display:inline-block;animation:pulseSoft 2.4s infinite}
+/* 命盤 */
+.pillars{display:flex;gap:.5rem;flex-wrap:wrap}
+.pcard{flex:1;min-width:4.7rem;text-align:center;border:2px solid var(--line);border-radius:.8rem;padding:.5rem .2rem;background:rgba(0,0,0,.28);animation:fadeUp .5s both}
+.pcard.me{border-color:var(--gold);box-shadow:0 0 14px rgba(246,200,106,.35)}
+.pcard .pt{font-size:.72rem;color:var(--sub);letter-spacing:.2em}.pcard .pal{font-size:.62rem;color:var(--gold)}
+.pcard .bigc{font-size:2rem;font-weight:900;line-height:1.25;text-shadow:0 0 12px currentColor}
+.pcard .tg{font-size:.7rem;color:#e3c6ff}.pcard .hid{font-size:.68rem;margin-top:.15rem;color:var(--sub)}
+.dyline{display:flex;gap:.45rem;overflow-x:auto;padding:.5rem .1rem}
+.dy{min-width:4rem;text-align:center;border:2px solid var(--line);border-radius:.7rem;padding:.35rem .1rem;font-size:1rem;background:rgba(0,0,0,.25);position:relative}
+.dy.cur{border-color:var(--gold);box-shadow:0 0 16px rgba(246,200,106,.5);animation:glow 2.6s infinite}
+.dy .age{font-size:.68rem;color:var(--sub)}
+.skill{padding:.45rem .6rem;border:1.5px solid var(--line);border-radius:.6rem;margin:.35rem 0;font-size:.88rem;background:rgba(0,0,0,.25)}
+.skill small{display:block;color:var(--sub);font-size:.78rem}
+.alert{border:2px solid var(--bad);border-radius:.7rem;padding:.45rem .7rem;background:rgba(255,85,119,.08);font-size:.92rem;margin-bottom:.5rem}
+.okline{border:2px solid var(--good);border-radius:.7rem;padding:.45rem .7rem;background:rgba(67,224,138,.08);font-size:.92rem;margin-bottom:.5rem}
+.hero{text-align:center}
+footer{font-size:.74rem;color:var(--sub);margin-top:1rem;border-top:1px dashed var(--line);padding-top:.8rem}
+#toast{position:fixed;left:50%;bottom:6rem;transform:translateX(-50%) translateY(200%);z-index:110;background:linear-gradient(180deg,#3a2c7a,#1c1546);color:var(--gold2);padding:.55rem 1.1rem;border-radius:.8rem;font-weight:900;transition:transform .4s cubic-bezier(.2,1.5,.4,1);border:2px solid var(--gold);box-shadow:0 0 20px rgba(246,200,106,.5);white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0)}
+.cf{position:fixed;top:-40px;z-index:120;pointer-events:none;animation:cf 2.6s ease-in forwards}
+/* keyframes */
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes spinSlow{to{transform:rotate(360deg)}}
+@keyframes shimTxt{to{background-position:200% 0}}
+@keyframes pageIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes popIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
+@keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes bobBig{0%,100%{transform:translateY(-2px) scale(1.12)}50%{transform:translateY(-7px) scale(1.18)}}
+@keyframes glow{0%,100%{box-shadow:0 0 4px rgba(246,200,106,.5)}50%{box-shadow:0 0 18px rgba(246,200,106,.9)}}
+@keyframes btnGlow{0%,100%{box-shadow:0 4px 0 #8a5a14,0 0 10px rgba(246,200,106,.35)}50%{box-shadow:0 4px 0 #8a5a14,0 0 26px rgba(246,200,106,.8)}}
+@keyframes cardPulse{0%,100%{box-shadow:0 0 10px rgba(246,200,106,.35)}50%{box-shadow:0 0 28px rgba(246,200,106,.8)}}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:.65}}
+@keyframes pulseSoft{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes blink{50%{opacity:0}}
+@keyframes barShine{0%{transform:translateX(-100%)}60%,100%{transform:translateX(250%)}}
+@keyframes cardShine{0%{left:-60%}55%,100%{left:130%}}
+@keyframes rainbow{to{background-position:0 0,300% 50%}}
+@keyframes floatUp{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(-3rem) scale(1.4)}}
+@keyframes sway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+@keyframes flick{from{transform:scale(1,1)}to{transform:scale(.92,1.1)}}
+@keyframes rise{from{transform:translateY(8px)}to{transform:translateY(-5px)}}
+@keyframes shine{0%{transform:translateX(0)}60%,100%{transform:translateX(130px)}}
+@keyframes wave{to{transform:translateX(40px)}}
+@keyframes leaf{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(-34px,70px) rotate(220deg);opacity:0}}
+@keyframes sparkA{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-30px);opacity:0}}
+@keyframes segp{50%{fill-opacity:.5}}
+@keyframes grow{from{transform:scale(0)}}
+@keyframes dash{to{stroke-dashoffset:-32}}
+@keyframes ringp{50%{stroke-opacity:.15;stroke-width:6}}
+@keyframes drift{from{left:-30%}to{left:110%}}
+@keyframes fall{to{transform:translateY(12rem)}}
+@keyframes flash{0%,90%,100%{opacity:0}91.5%{opacity:.75}93%{opacity:0}94.5%{opacity:.5}}
+@keyframes twinkle{0%,100%{opacity:.2}50%{opacity:1}}
+@keyframes fogmove{from{transform:translateX(-30%)}to{transform:translateX(30%)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+@keyframes cf{to{transform:translateY(112vh) rotate(600deg)}}
+.taiji{animation:spin 10s linear infinite}
+body.noanim *,body.noanim *::before,body.noanim *::after{animation:none!important;transition:none!important}
+body.noanim #fx{display:none}
+</style>
+<style>
+/* ===== v2 追加樣式 ===== */
+/* 彈出式提示：彈出→向上飄走→消失，唔阻住介面 */
+.pop{position:fixed;left:50%;top:30%;z-index:130;pointer-events:none;transform:translate(-50%,-50%);background:linear-gradient(180deg,rgba(58,44,122,.96),rgba(28,21,70,.96));color:var(--gold2);padding:.6rem 1.3rem;border-radius:1rem;font-weight:900;border:2px solid var(--gold);box-shadow:0 0 26px rgba(246,200,106,.55);white-space:nowrap;max-width:92vw;animation:popFade 2.6s ease-out forwards}
+@keyframes popFade{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}20%{transform:translate(-50%,-50%) scale(1)}65%{opacity:1;transform:translate(-50%,-70%)}100%{opacity:0;transform:translate(-50%,-180%) scale(.9);filter:blur(4px)}}
+#toast{display:none!important}
+/* NPC 對話框 */
+.npctext{font-size:1.05rem;min-height:3.3rem}
+.npctext.end::after{content:none}
+.npcfoot{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin-top:.35rem}
+#npcNext{margin-left:auto;animation:bob 1.4s infinite}
+.aff{font-size:.68rem;color:#ff9cc2;border:1px solid #ff9cc2;border-radius:99px;padding:0 .45rem;margin-left:.4rem;font-weight:800}
+.affrow{display:flex;align-items:center;gap:.5rem;font-size:.8rem;margin-top:.6rem}
+.affrow .bar{flex:1;height:.6rem}.affrow .bar i{transition:width 1.2s}
+/* 雷達圖 */
+.radar{width:min(100%,21rem)}
+.radar .grow{transform-origin:150px 148px}
+.rdleg{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;font-size:.8rem;margin:.3rem 0 .6rem}
+.rdleg i{display:inline-block;width:1.1rem;height:.4rem;border-radius:2px;vertical-align:middle;margin-right:.3rem}
+/* 虧佬指數：版本選擇 */
+.verpick{display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap;margin:.9rem 0}
+.vbtn{font:inherit;cursor:pointer;color:var(--ink);width:10.5rem;padding:.9rem .5rem;border-radius:1rem;border:2px solid var(--gold);background:linear-gradient(180deg,#3a2c7a,#1c1546);display:flex;flex-direction:column;gap:.25rem;box-shadow:0 4px 0 #0a0720,0 0 14px rgba(246,200,106,.3);transition:transform .15s}
+.vbtn:hover{transform:translateY(-3px)}.vbtn b{font-size:1.15rem;color:var(--gold)}.vbtn small{color:var(--sub);font-size:.76rem;line-height:1.5}
+/* 易卦 */
+.tabbar button span{font-size:1.2rem}
+.yjcats{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem}
+.ycat{font:inherit;cursor:pointer;color:var(--ink);background:linear-gradient(180deg,#2b2366,#1b1546);border:2px solid var(--line);border-radius:.8rem;padding:.4rem .2rem;font-size:.8rem;line-height:1.4}
+.ycat.on{border-color:var(--gold);background:linear-gradient(180deg,#5a4520,#2b2050);box-shadow:0 0 12px rgba(246,200,106,.4)}
+.yjwrap{display:flex;gap:1.2rem;align-items:center;justify-content:center;flex-wrap:wrap;margin:.7rem 0}
+.yjlog{font-size:.8rem;min-width:9rem}
+.hexg{display:flex;flex-direction:column-reverse;gap:.4rem;width:7.5rem;margin:0 auto}.hexg.sm{width:5.5rem;gap:.32rem}
+.yao{display:flex;gap:.7rem;height:.85rem}.hexg.sm .yao{height:.6rem;gap:.5rem}
+.yao i{flex:1;border-radius:3px;background:linear-gradient(90deg,#ffe29a,#e8a93e);box-shadow:0 0 8px rgba(246,200,106,.45)}
+.yao.yang i+i{display:none}
+.yao.empty i{background:none;border:2px dashed #5b5390;box-shadow:none}
+.yao.new{animation:yaoIn .55s cubic-bezier(.2,1.5,.4,1) both}
+.yao.chg i{background:linear-gradient(90deg,#ffb0bd,#ff5577);animation:yaoGlow 1.4s infinite}
+@keyframes yaoIn{from{opacity:0;transform:scaleX(0)}}
+@keyframes yaoGlow{50%{box-shadow:0 0 16px #ff5577}}
+.coins{display:flex;gap:1rem;justify-content:center;margin:.9rem 0;min-height:3.6rem}
+.coin{position:relative;width:3.2rem;height:3.2rem;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3c4,#e8a93e 55%,#8a5a14);border:2px solid #ffefc0;box-shadow:0 5px 10px rgba(0,0,0,.5),inset 0 0 0 4px rgba(138,90,20,.5);display:flex;align-items:center;justify-content:center}
+.coin::before{content:"";width:.85rem;height:.85rem;background:#140f33;border:2px solid #6b4310}
+.coin span{position:absolute;bottom:.12rem;font-size:.62rem;font-weight:900;color:#3a2400}
+.coin.b{filter:brightness(.68) saturate(.7)}
+.coin.flip{animation:coinFlip 1.05s cubic-bezier(.3,.8,.4,1) both}
+@keyframes coinFlip{0%{transform:translateY(0) rotateX(0)}45%{transform:translateY(-4rem) rotateX(900deg)}100%{transform:translateY(0) rotateX(1800deg)}}
+.hexpair{display:flex;align-items:center;justify-content:center;gap:.6rem;flex-wrap:wrap;margin:.7rem 0}
+.hexcard{text-align:center;border:2px solid var(--line);border-radius:1rem;padding:.6rem .8rem;background:rgba(0,0,0,.25);min-width:8.5rem;animation:popIn .5s both}
+.hxn{font-size:1.5rem;font-weight:900;color:var(--gold);margin-top:.4rem}
+.harrow{font-size:1.8rem;color:var(--gold);animation:arrowGo 1.2s ease-in-out infinite}
+@keyframes arrowGo{50%{transform:translateX(6px)}}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<header class="top">
+<div class="logo"><svg viewBox="0 0 100 100" class="taiji"><circle cx="50" cy="50" r="48" fill="#fff6dc"></circle><path d="M50 2A48 48 0 0 1 50 98A24 24 0 0 1 50 50A24 24 0 0 0 50 2Z" fill="#1a1433"></path><circle cx="50" cy="26" r="7" fill="#1a1433"></circle><circle cx="50" cy="74" r="7" fill="#fff6dc"></circle></svg>
+<div><b>五行命盤儀</b><small id="engineBadge">載入中…</small></div></div>
+<div id="hud"></div>
+<div class="tbtns"><button class="ib" id="animBtn" title="動畫開關">✨</button><button class="ib" onclick="setFS(-1)">A−</button><button class="ib" onclick="setFS(1)">A＋</button></div>
+</header>
+
+<main>
+<section class="page" id="pg-home"><div id="homeBody"></div></section>
+<section class="page" id="pg-out"><div id="wxBody"></div></section>
+<section class="page" id="pg-role"><div id="roleBody"></div></section>
+<section class="page" id="pg-gods"><div id="godsBody"></div></section>
+<section class="page" id="pg-health"><div id="healthBody"></div></section>
+<section class="page" id="pg-chart">
+<div class="panel"><div class="ptitle">🕰️ 而家嘅時間能量 <button class="btn2 mini" onclick="renderAll()">🔄 更新</button></div>
+<div class="hint">每一年、每個月、每日、每個時辰都有自己嘅「天干地支」，即係當時嘅五行能量。佢哋同你出世嗰陣嘅能量互動，就係運勢。</div>
+<div id="nowBody"></div></div>
+
+<div class="panel" id="formPanel">
+<div class="ptitle">⚔️ 建立／修改角色（出生資料）</div>
+<div class="hint">填你嘅出生日期就得，時辰唔知可以留空。資料只會存喺你部機，下次開會自動出結果。</div>
+<div class="grid">
+<div><label>輸入曆法</label><select id="caltype" onchange="calSwitch()"><option value="solar">西曆（新曆）</option><option value="lunar">農曆（舊曆）</option></select></div>
+<div id="solarBox"><label>出生日期（西曆）</label><input type="date" id="bdate" min="1900-01-01"></div>
+<div id="lunarBox" style="display:none"><label>農曆出生日期</label>
+<div style="display:flex;gap:.3rem;align-items:center;flex-wrap:wrap">
+<input type="number" id="lyear" placeholder="年(西曆年)" min="1900" max="2100" style="width:6rem">
+<select id="lmonth"></select><select id="lday"></select>
+<label style="font-size:.78rem"><input type="checkbox" id="lleap"> 閏月</label></div>
+<small class="sub">年份填該農曆年對應嘅西曆年（如 1990 年正月填 1990）</small></div>
+<div><label>出生時辰（可留空）</label><select id="bhour">
+<option value="-1">唔知道（只排三柱）</option>
+<option value="23">夜子時 23:00–23:59</option><option value="0">早子時 00:00–00:59</option>
+<option value="2">丑時 01–03</option><option value="4">寅時 03–05</option>
+<option value="6">卯時 05–07</option><option value="8">辰時 07–09</option>
+<option value="10">巳時 09–11</option><option value="12">午時 11–13</option>
+<option value="14">未時 13–15</option><option value="16">申時 15–17</option>
+<option value="18">酉時 17–19</option><option value="20">戌時 19–21</option>
+<option value="22">亥時 21–23</option></select></div>
+<div><label>性別</label><select id="gender"><option value="M">男</option><option value="F">女</option></select></div>
+<div><label>換日規則</label><select id="rule"><option value="zichu">晚上11點轉日（預設）</option><option value="zizheng">凌晨12點轉日</option></select></div>
+</div>
+<details><summary>進階：精確出生時間＋真太陽時（唔識可以唔理）</summary>
+<div class="grid" style="margin-top:.4rem">
+<div><label>精確出生時間</label><input type="time" id="btime"></div>
+<div><label>出生城市</label><select id="bcity"><option value="">－不修正－</option></select></div>
+<div><label>或自訂經度</label><input type="number" id="blon" step="0.01" placeholder="114.17" style="width:7rem"></div>
+<div><label>出生地時區(UTC+)</label><input type="number" id="btz" step="0.5" value="8" style="width:5rem"></div></div>
+<small class="sub">真太陽時＝按出生地經度修正鐘錶時間。填咗精確時間會優先於上面嘅時辰。</small></details>
+<div style="margin-top:.8rem;display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
+<button class="btn big" onclick="analyze()">⚔️ 生成角色</button>
+<button class="btn2" onclick="clearData()">清除資料</button>
+<span id="storeWarn" style="color:var(--warn);font-size:.75rem"></span></div>
+</div>
+<div id="chartBody"></div>
+<footer>
+<b>免責聲明：</b>本頁內容純屬傳統命理及中醫養生文化參考、娛樂用途，並非法律、醫療、財務或任何專業意見。體質檢查係簡化版自我評估，唔可以代替中醫師或醫生診斷；不適用於急症，孕婦、長期病患者請以醫生意見為準。合婚內容僅屬文化趣味，切勿以此作重大決定。風險提示為演算法推論，不構成任何保證。天氣資料來自 Open-Meteo，惡劣天氣請以當地氣象台（如香港天文台）官方警告為準。
+<details><summary>📱 加到手機主畫面（似 App 咁用）</summary>
+iPhone：Safari 開呢頁 → 分享 → 「加至主畫面」。Android：Chrome → 右上選單 → 「加到主畫面」。</details>
+</footer>
+</section>
+</main>
+
+<nav class="tabbar">
+<button data-tab="home" onclick="showTab('home')"><span>🏯</span>主城</button>
+<button data-tab="out" onclick="showTab('out')"><span>🌦️</span>出門</button>
+<button data-tab="role" onclick="showTab('role')"><span>🧙</span>角色</button>
+<button data-tab="gods" onclick="showTab('gods')"><span>🎴</span>十神</button>
+<button data-tab="health" onclick="showTab('health')"><span>🌿</span>養生</button>
+<button data-tab="chart" onclick="showTab('chart')"><span>📜</span>命盤</button>
+</nav>
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()"><div class="mbox" id="mbox"></div></div>
+<div id="toast"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+/* ===== 基礎資料 ===== */
+const GAN='甲乙丙丁戊己庚辛壬癸',ZHI='子丑寅卯辰巳午未申酉戌亥';
+const GEL=['木','木','火','火','土','土','金','金','水','水'];
+const ZEL=['水','土','木','木','土','火','火','土','金','金','土','水'];
+const GEN={木:'火',火:'土',土:'金',金:'水',水:'木'},KE={木:'土',土:'水',水:'火',火:'金',金:'木'};
+const GENBY={火:'木',土:'火',金:'土',水:'金',木:'水'},KEBY={土:'木',水:'土',火:'水',金:'火',木:'金'};
+const CANG={0:[9],1:[5,9,7],2:[0,2,4],3:[1],4:[4,1,9],5:[2,4,6],6:[3,5],7:[5,3,1],8:[6,8,4],9:[7],10:[4,7,3],11:[8,0]};
+const chongOf=z=>(z+6)%12;
+const HE6={0:1,1:0,2:11,11:2,3:10,10:3,4:9,9:4,5:8,8:5,6:7,7:6};
+const HE6EL=(a,b)=>{const k=[a,b].sort((x,y)=>x-y).join();return{'0,1':'土','2,11':'木','3,10':'火','4,9':'金','5,8':'水','6,7':''}[k]||'';};
+const HAI={0:7,7:0,1:6,6:1,2:5,5:2,3:4,4:3,8:11,11:8,9:10,10:9};
+const XINGP=[[2,5],[5,8],[2,8],[1,10],[10,7],[1,7],[0,3]],SELFX=[4,6,9,11];
+const isXing=(a,b)=>a===b?SELFX.includes(a):XINGP.some(p=>(p[0]===a&&p[1]===b)||(p[0]===b&&p[1]===a));
+const SANHE=[[8,0,4,'水'],[11,3,7,'木'],[2,6,10,'火'],[5,9,1,'金']];
+const SANHUI=[[2,3,4,'木'],[5,6,7,'火'],[8,9,10,'金'],[11,0,1,'水']];
+function halfHe(a,b){for(const t of SANHE){const[x,m,y,el]=t;if((a===x&&b===m)||(a===m&&b===x)||(a===m&&b===y)||(a===y&&b===m))return{el,trio:t};}return null;}
+const grp=z=>[8,0,4].includes(z)?0:[2,6,10].includes(z)?1:[11,3,7].includes(z)?2:3;
+const HORSE=z=>[2,8,5,11][grp(z)],PEACH=z=>[9,3,0,6][grp(z)],HUAGAI=z=>[4,10,7,1][grp(z)];
+const TIANYI={0:[1,7],4:[1,7],6:[1,7],1:[0,8],5:[0,8],2:[11,9],3:[11,9],8:[3,5],9:[3,5],7:[2,6]};
+const TAIJI={0:[0,6],1:[0,6],2:[3,9],3:[3,9],4:[4,10,1,7],5:[4,10,1,7],6:[2,3],7:[2,3],8:[5,8],9:[5,8]};
+const WENCHANG=[5,6,8,9,8,9,11,0,2,3],GUOYIN=[10,11,1,2,1,2,4,5,7,8];
+const FUXING={0:[2,0],2:[2,0],1:[3,1],9:[3,1],4:[8],5:[7],3:[11],6:[6],7:[5],8:[4]};
+const TIANDE=['丁','申','壬','辛','亥','甲','癸','寅','丙','乙','巳','庚'];
+const YUEDE=z=>['壬','丙','甲','庚'][grp(z)];
+const JIE=[[2,4],[3,6],[4,5],[5,6],[6,6],[7,7],[8,8],[9,8],[10,8],[11,7],[12,7],[1,6]];
+const gsp=g=>`<span class="wx${GEL[g]}">${GAN[g]}</span>`,zsp=z=>`<span class="wx${ZEL[z]}">${ZHI[z]}</span>`;
+const usePrecise=()=>!window.__noLunar&&typeof Solar!=='undefined';
+const HR=['23–01','01–03','03–05','05–07','07–09','09–11','11–13','13–15','15–17','17–19','19–21','21–23'];
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hourToZ=h=>Math.floor((h+1)/2)%12;
+const ELC={木:'#4ade80',火:'#ff6b5b',土:'#e6a95c',金:'#ffd95e',水:'#55b9ff'};
+const ELI={木:'🌳',火:'🔥',土:'⛰️',金:'⚔️',水:'🌊'};
+const LVC=['#43e08a','#ffc04d','#ff5577'],GOLD='#f6c86a';
+const POSP={年支:'年柱',月支:'月柱',日支:'日柱',時支:'時柱'};
+const RELP={沖:'相撞',刑:'相磨',害:'暗損',合:'相合',半合:'半合'};
+const DUR={'大運':'呢十年都有效','本年':'今年有效','本月':'今個月有效','本日':'今日有效','本時':'呢個時辰有效'};
+const SPANTXT={'大運':'呢十年','本年':'今年','本月':'今個月','本日':'今日','本時':'呢個時辰'};
+const VALID={'大運':'呢步大運完','本年':'今年年底','本月':'今個月底','本日':'今晚','本時':'呢個時辰完'};
+
+/* ===== 文案（淺白版） ===== */
+const SS_DESC={
+'天乙貴人':'最強貴人：有難嗰陣特別容易有人出手幫你',
+'太極貴人':'悟性高：對玄學、宗教、深奧學問特別有天份',
+'天德貴人':'護身光環：心地好，暗中幫你化解麻煩',
+'月德貴人':'溫柔保護：人緣好，壞事通常會減半',
+'文昌貴人':'讀書技能：考試、寫嘢、處理文件特別醒',
+'福星貴人':'好彩體質：天生樂觀知足，福氣自己嚟',
+'國印貴人':'信用勳章：正直守規矩，容易被人信任、掌權',
+'驛馬':'移動技能：多出差、搬屋、轉工，郁得多機會多',
+'桃花':'魅力技能：人緣好、受歡迎、異性緣佳',
+'羊刃':'爆發技能：行動力超強，但容易衝動、同人起衝突',
+'華蓋':'藝術技能：喜歡藝術、哲學、宗教，享受一個人',
+'孤辰':'獨行氣質：思想獨立，感情上要學識主動',
+'寡宿':'安靜氣質：鍾意靜，朋友唔多但深交',
+'紅鸞':'正緣星：主拍拖、結婚等感情喜事',
+'天喜':'喜事星：主好消息、慶祝、添丁',
+'空亡':'落空標記：呢粒字力量打咗折，相關嘅事容易「得個桔」，期望唔好太高'};
+const COMBO_DESC={
+'沖':'相撞：兩種力量喺你身上對撼，人生多變動、多走動',
+'六合':'相合：天生容易同人合作、結緣',
+'半合':'半組隊：有合作潛力，差少少就成團',
+'三合':'三人組隊：容易聚集人氣同力量',
+'三會':'一方霸主：某種五行力量特別強',
+'刑':'相磨：容易同自己過唔去、鑽牛角尖，亦代表規矩整頓',
+'害':'暗損：容易被人暗中搞小動作，合作要留神',
+'干合':'天干相合：性格有黏合力，感情事業易有牽絆'};
+const GAN_DESC=[
+'好似一棵大樹：正直、硬淨，認定目標就一直向上。小貼士：識少少彎腰，路會行得更遠。',
+'好似花草藤蔓：柔軟、靈活，識得借力。小貼士：搵啱可靠嘅人合作，事半功倍。',
+'好似太陽：熱情、開朗，好有感染力。小貼士：唔使場場做主角，留啲能量畀自己。',
+'好似燭光：溫柔、細心，喺暗處先見到你嘅好。小貼士：大膽啲企出嚟，畀人見到你。',
+'好似大山：穩重、可靠，係身邊人嘅定心丸。小貼士：間中主動表達自己。',
+'好似田地：包容、會照顧人。小貼士：照顧人之餘，記得照顧自己。',
+'好似一把劍：果斷、剛強，越磨越利。小貼士：出手前數三聲，唔好太衝。',
+'好似珠寶：精緻、敏感，外柔內剛。小貼士：唔使事事完美，八十分已經好靚。',
+'好似大江大海：聰明、豪爽，志在四方。小貼士：定好一個方向，唔好散晒。',
+'好似雨露：細膩、低調，默默滋潤身邊人。小貼士：你嘅觀察力好值錢，大膽講出嚟。'];
+const ORGANS=['膽','肝','肺','大腸','胃','脾','心','小腸','膀胱','腎','心包','三焦'];
+const HOUR_TIPS=[
+'子時（23:00–01:00）膽經時間：應該瞓覺。呢個鐘仲好精神、瞓唔着，或者半夜驚醒心跳，可能膽氣唔夠。長期捱夜容易口苦、頭暈、做決定猶豫。',
+'丑時（01:00–03:00）肝經時間：熟瞓先養到肝。成日呢個鐘醒、多夢、出汗，可能肝火盛或肝血唔夠，日頭會眼乾、易嬲。',
+'寅時（03:00–05:00）肺經時間：呢個鐘咳醒、氣喘、胸口翳，要留意肺。天光前肚痛肚瀉，多數係脾腎偏寒，可搵中醫調理。',
+'卯時（05:00–07:00）大腸經時間：起身飲杯暖水，最啱去廁所。成日便秘、皮膚粗糙，要留意腸道。',
+'辰時（07:00–09:00）胃經時間：一定要食早餐！暖粥暖食最養胃。朝早胃脹、反酸、口臭，可能胃火或者消化唔好。',
+'巳時（09:00–11:00）脾經時間：頭腦最清醒，做正經嘢。呢個鐘已經眼瞓、無力、面腫腳腫，可能濕氣重，少食凍嘢。',
+'午時（11:00–13:00）心經時間：食完飯瞓15–30分鐘最養心。呢個鐘心跳快、胸口翳、面紅頭痛，要留意血壓。',
+'未時（13:00–15:00）小腸經時間：食完飯消化時間。下晝面熱熱、出汗，可能陰虛；食完肚脹痛，要留意消化。',
+'申時（15:00–17:00）膀胱經時間：多飲水、多去廁所。呢個鐘特別攰、尿頻、後頸痛，要留意。',
+'酉時（17:00–19:00）腎經時間：放慢腳步，晚餐清淡啲。腰痠腳軟、耳鳴、夜尿多，可能腎氣弱。',
+'戌時（19:00–21:00）心包經時間：散步、拉筋、放鬆心情最好。夜晚心翳、心情低落，唔好死頂，同人傾下偈。',
+'亥時（21:00–23:00）三焦經時間：準備瞓覺，少飲水、收埋手機。呢個鐘瞓唔着、耳鳴、周身痕，要放鬆身心。'];
+const ELEM_HEALTH={
+木:{organ:'肝膽・筋・眼',over:'易嬲煩躁、頭脹頭痛、眼紅、兩邊脅骨脹',weak:'眼乾眼矇、筋緊易抽筋、易攰、猶豫不決',check:'肝功能、眼科、血壓'},
+火:{organ:'心・小腸・血管',over:'心煩瞓唔着、口瘡、面紅心跳快',weak:'心慌氣短、手腳凍、面青青',check:'血壓、心電圖、血脂'},
+土:{organ:'脾胃・肌肉',over:'濕重身重、肚脹痰多、易肥',weak:'胃口差、消化唔好、大便爛、肌肉無力',check:'腸胃、幽門螺旋菌、血糖'},
+金:{organ:'肺・大腸・皮膚・鼻',over:'乾咳、皮膚乾痕、聲沙',weak:'易感冒、鼻敏感、氣短、便秘',check:'肺功能、胸肺X光、皮膚科'},
+水:{organ:'腎・膀胱・骨・耳',over:'水腫、怕凍、夜尿多',weak:'腰痠腳軟、耳鳴、甩頭髮、記性差',check:'腎功能、小便檢查、骨質密度'}};
+const HEALTH_LINE={木:'早啲瞓、少嬲，護肝就係護運。',火:'心靜自然涼，午飯後小睡十五分鐘養心。',土:'三餐定時、少食凍嘢，脾胃好人就精神。',金:'深呼吸、多飲暖水，潤肺防乾燥。',水:'十一點前上床，瞓覺係最平嘅補腎方法。'};
+const DIRECTION={木:'東方',火:'南方',土:'中央／本地',金:'西方',水:'北方'};
+const ELEM_LIFE={
+木:{diet:'多食綠色蔬菜、少少酸味（檸檬、醋）',sport:'伸展、瑜伽、去公園或行山',ind:'教育、出版、醫護、園藝、設計'},
+火:{diet:'暖身食物（薑、紅棗、紅色食物），少凍飲',sport:'日頭做帶氧運動、多曬太陽',ind:'能源、餐飲、演藝、市場推廣、IT'},
+土:{diet:'黃色食物（南瓜、粟米、小米）',sport:'行山、慢跑、種花種菜',ind:'地產建築、農業食品、保險、行政'},
+金:{diet:'白色食物（雪梨、百合、白蘿蔔）',sport:'健身器械、呼吸練習、清晨運動',ind:'金融、法律、工程、珠寶'},
+水:{diet:'黑色食物（黑豆、黑芝麻、海帶），飲夠水',sport:'游水、太極、有節奏嘅運動',ind:'物流貿易、旅遊、傳媒、飲品'}};
+const PALACE={年:'長輩・童年',月:'工作・兄弟',日:'自己・伴侶',時:'子女・晚年'};
+const CLASS_INFO=[
+{title:'蒼木戰士',cls:'戰士',line:'前排近戰：正面硬撼，越戰越勇，隊伍嘅開路先鋒。'},
+{title:'青藤遊俠',cls:'遊俠',line:'靈巧遠攻：走位靈活，借力打力，逆境求生專家。'},
+{title:'烈陽法師',cls:'法師',line:'火系大範圍攻擊：氣場全開，一出手全場都感受到。'},
+{title:'燭光咒術師',cls:'咒術師',line:'精準單體法術：唔靠聲勢，一擊即中要害。'},
+{title:'山嶽重盾衛士',cls:'重盾衛士',line:'隊伍主坦：血厚防高，企喺度就係隊友嘅安全感。'},
+{title:'大地牧師',cls:'牧師',line:'治療輔助：默默幫隊友補血，成就人亦成就自己。'},
+{title:'破陣狂戰士',cls:'狂戰士',line:'爆發攻擊：刀刀到肉，唔怕硬仗。'},
+{title:'銀刃刺客',cls:'刺客',line:'敏捷暴擊：心思細密，睇準時機一擊即中。'},
+{title:'滄瀾元素使',cls:'元素法師',line:'水系控場：思路靈活多變，掌控成個戰場節奏。'},
+{title:'霧雨賢者',cls:'賢者',line:'智慧輔助：觀察入微，料事如神，隊伍嘅軍師。'}];
+const SUBCLASS=[['參天古木','待養新苗'],['漫山藤蔓','初芽嫩苗'],['烈日當空','晨曦初陽'],['燎原星火','一點心燈'],['崇山峻嶺','新壘之土'],['沃野千里','薄田待耕'],['百煉精鋼','未淬之鐵'],['琢玉成器','璞玉待琢'],['江海奔流','涓涓細流'],['甘霖遍灑','朝露待陽']];
+
+/* ===== 十神資料 ===== */
+const TG10=['比肩','劫財','食神','傷官','偏財','正財','七殺','正官','偏印','正印'];
+const TG_INFO={
+比肩:{ic:'🛡️',nick:'並肩戰友',short:'同你一樣嘅人：朋友、兄弟姊妹、同學、同事',plain:'代表自信、獨立、靠自己。好似遊戲入面同職業嘅隊友，一齊打怪。',more:'固執、唔聽人講，容易同人爭資源（錢要分）',less:'做嘢少人幫手，容易孤軍作戰',game:'召喚隊友：開團多個幫手，但戰利品要分',today:'朋友同輩多互動，啱合作，但唔好爭'},
+劫財:{ic:'🤼',nick:'競爭對手',short:'同你差唔多但又唔同嘅人：競爭者、豪爽朋友',plain:'代表膽量、社交、敢搏。佢可以係朋友，亦可能會搶你嘢。',more:'衝動花錢、借錢畀人收唔返、合夥易拆',less:'欠衝勁，唔夠膽去爭取',game:'PVP對手：激起你嘅鬥志，但小心被搶裝備',today:'容易有額外開支，借錢、簽單要小心'},
+食神:{ic:'🍰',nick:'快樂廚神',short:'你嘅才華、口福、享受生活嘅能力',plain:'代表好脾氣、識享受、有才藝，用溫和方法表達自己。',more:'太貪舒服，容易懶、容易肥',less:'唔識放鬆，生活少咗樂趣',game:'持續回血被動技：慢慢輸出，穩穩陣陣',today:'心情輕鬆，啱食好嘢、玩樂、創作'},
+傷官:{ic:'🎤',nick:'天才鬼才',short:'你嘅創意、口才、叛逆心',plain:'代表好叻、好有主見、敢挑戰權威，但講嘢太快容易得罪人。',more:'講嘢太直傷人，同上司唔夾',less:'表達力弱，有料講唔出',game:'暴擊大招：傷害爆燈，但可能反傷自己',today:'靈感多，但講嘢易得失人，口下留情'},
+偏財:{ic:'💎',nick:'稀有寶箱',short:'意外之財、生意、投資、人脈帶嚟嘅錢',plain:'代表大方、識捉機會、有生意頭腦。錢嚟得快去得快。',more:'易貪快錢、大花筒、感情多瓜葛',less:'唔太識捉機會搵外快',game:'隨機掉寶：可能爆大獎，亦可能空手而回',today:'有意外收穫機會，但唔好貪心賭博'},
+正財:{ic:'💰',nick:'每日糧餉',short:'人工、穩定收入、勤力得返嚟嘅錢',plain:'代表踏實、慳家、有責任感，一分耕耘一分收穫。',more:'為錢好攰、壓力大（尤其能量不足型）',less:'對錢冇乜概念，要學理財',game:'每日登入獎勵：唔會爆，但日日有',today:'勤力有回報，啱處理錢銀、理財'},
+七殺:{ic:'🐉',nick:'精英魔王',short:'壓力、挑戰、對手、魄力',plain:'代表魄力同霸氣。有壓力先有動力，打得贏就做大佬。',more:'壓力大、易焦慮、易惹是非或意外',less:'欠魄力，關鍵時刻唔夠狠',game:'精英Boss：好難打，但打贏升級最快',today:'壓力或挑戰會嚟，冷靜應對，注意安全'},
+正官:{ic:'👑',nick:'公會會長',short:'規矩、上司、職位、名聲',plain:'代表守規矩、有責任心、正派，適合一步步升職。',more:'太拘謹、怕犯錯、壓力大',less:'自由散漫，唔鍾意被人管',game:'主線任務：跟住規則行，升職加名聲',today:'啱見上司、辦正事，守規矩有着數'},
+偏印:{ic:'🔮',nick:'神秘導師',short:'冷門學問、直覺、玄學、獨門技能',plain:'代表諗嘢與別不同、直覺強，鍾意研究冷門嘢。',more:'諗太多、孤獨、做嘢有頭冇尾',less:'少咗靈感同第六感',game:'隱藏技能書：學識咗就係獨門絕技',today:'直覺強，啱學新嘢、研究，但唔好諗太多'},
+正印:{ic:'📖',nick:'守護天使',short:'媽媽、長輩、老師、學歷、證書',plain:'代表有人錫、有靠山、鍾意學習、心地好。',more:'太依賴人，懶得自己郁手',less:'凡事靠自己，少人照顧',game:'補血護盾：危急時有人救你',today:'有貴人幫手，啱讀書、考試、搵長輩'}};
+function godPeople(n,g){const M=g==='M';return({食神:M?'':'；女仔亦代表子女',傷官:M?'':'；女仔亦代表子女',偏財:M?'；男仔亦代表爸爸、女朋友':'；亦代表爸爸',正財:M?'；男仔亦代表老婆':'',七殺:M?'；男仔亦代表子女':'；女仔亦代表男朋友',正官:M?'；男仔亦代表子女':'；女仔亦代表老公',偏印:'；亦可代表師傅、繼母'}[n])||'';}
+const GRPN=[['比劫','同伴'],['食傷','才華'],['財星','錢財'],['官殺','壓力'],['印星','靠山']];
+
+/* ===== 中醫九種體質 ===== */
+const TZ=[
+{k:'平和',ic:'🌟',el:'',plain:'身體平衡、精神好，好似遊戲角色各項數值都好均衡。',sign:'精力充沛、瞓得好、胃口好、唔易病',diet:'均衡飲食，咩都食少少，唔好偏食',life:'作息定時，保持運動習慣',avoid:'暴飲暴食、長期捱夜',
+items:[['平時精力充沛、好有活力？',1],['容易覺得好攰？',0],['天氣轉變、去新環境，都好快適應到？',1],['容易瞓唔着、瞓得唔好？',0]]},
+{k:'氣虛',ic:'🔋',el:'土',plain:'即係「電量不足」：成日攰、講嘢冇力、易病。',sign:'易攰、氣喘、易出汗、易感冒',diet:'淮山、南瓜、小米粥、雞肉、紅棗、黃耆（中醫指示下）',life:'唔好捱夜、唔好過勞；做輕量運動（散步、太極）',avoid:'凍飲、過度節食、劇烈運動大汗',
+items:[['做少少嘢、行幾級樓梯就覺得攰、氣喘？'],['講嘢冇力、聲細細？'],['唔郁都容易出汗？'],['比身邊人容易傷風感冒？']]},
+{k:'陽虛',ic:'🧊',el:'火',plain:'即係「暖氣唔夠」：手腳凍、怕冷、食凍嘢就肚痛。',sign:'手腳凍、怕冷、大便爛、精神差',diet:'薑、羊肉、桂圓、韭菜、核桃',life:'多曬太陽（尤其曬背）、浸腳、腰腹保暖',avoid:'凍飲、雪糕、生冷沙律、冷氣直吹',
+items:[['手腳冰凍？'],['比人怕凍，要着多件衫？'],['食凍嘢、飲凍飲之後會唔舒服、肚痛或肚瀉？'],['胃、背、腰或膝頭怕凍？']]},
+{k:'陰虛',ic:'🏜️',el:'水',plain:'即係「水份唔夠、虛火偏旺」：口乾、手心熱、易煩躁。',sign:'口乾、手腳心熱、便秘、瞓唔好',diet:'雪耳、百合、雪梨、鴨肉、黑芝麻',life:'11點前瞓、少捱夜，做柔和運動',avoid:'煎炸辛辣、燒烤、酒、焗桑拿大汗',
+items:[['手心腳心發熱？'],['成日口乾、喉嚨乾，想飲水？'],['面頰容易紅、身體一陣陣熱？'],['大便乾硬、容易便秘？']]},
+{k:'痰濕',ic:'🫧',el:'土',plain:'即係「身體積水積痰」：身重、肚腩大、口黏黏。',sign:'身重、肚腩大、痰多、易眼瞓',diet:'薏米、赤小豆、冬瓜、白蘿蔔、陳皮',life:'多郁多出汗，食飯七分飽',avoid:'甜品、肥膩、宵夜、凍飲',
+items:[['覺得身體好重、唔清爽？'],['肚腩大、肉鬆軟？'],['口入面黏黏膩膩，或者痰多？'],['朝早起身眼皮腫？']]},
+{k:'濕熱',ic:'🌋',el:'火',plain:'即係「又濕又熱」：面油、暗瘡、口苦、小便黃。',sign:'油面、暗瘡、口苦口臭、大便黏',diet:'綠豆、冬瓜、苦瓜、薏米、芹菜',life:'保持皮膚乾爽、唔好捱夜、多運動',avoid:'煎炸燒烤、辛辣、酒、甜膩',
+items:[['面同鼻容易出油？'],['容易生暗瘡？'],['口苦或者口臭？'],['大便黏、沖極都沖唔乾淨，或小便黃？']]},
+{k:'血瘀',ic:'🩸',el:'木',plain:'即係「血行唔順暢」：易瘀青、面暗、有刺痛。',sign:'易瘀青、面暗、黑眼圈、刺痛',diet:'山楂、黑木耳、洋蔥、玫瑰花茶',life:'多郁動、注意保暖、多按摩',avoid:'久坐唔郁、受凍、壓抑情緒',
+items:[['皮膚唔覺意就有瘀青？'],['面色偏暗、有黑眼圈？'],['身上有固定位置會刺痛？'],[g=>g==='F'?'經痛，或者經血有血塊？':'嘴唇顏色偏暗或者偏紫？']]},
+{k:'氣鬱',ic:'🌫️',el:'木',plain:'即係「心情塞車」：悶悶不樂、易緊張、成日嘆氣。',sign:'情緒低落、緊張、多愁善感',diet:'玫瑰花茶、陳皮、佛手、柑橘類',life:'多同朋友傾偈、多去戶外、唱歌跳舞',avoid:'一個人鑽牛角尖、捱夜、過多咖啡',
+items:[['成日悶悶不樂、提唔起勁？'],['容易緊張、焦慮？'],['多愁善感，容易想喊？'],['成日想嘆氣，或者喉嚨好似有嘢卡住？']]},
+{k:'特稟',ic:'🤧',el:'金',plain:'即係「敏感體質」：易打乞嗤、鼻敏感、皮膚敏感。',sign:'鼻敏感、皮膚敏感、易哮喘',diet:'清淡為主，淮山、紅棗；避開已知致敏食物',life:'避開致敏原、勤洗床鋪、加強運動',avoid:'塵蟎、花粉、已知會敏感嘅食物',
+items:[['冇傷風都會打乞嗤、鼻塞、流鼻水？'],['容易對食物、藥物、花粉或塵蟎敏感？'],['皮膚容易痕、起紅點或者風癩？'],['轉季容易氣喘或者咳？']]}];
+const QOPT=[['😌','冇'],['🙂','好少'],['😐','有時'],['😣','經常'],['😫','成日']];
+
+/* ===== 十神計算 ===== */
+function tenGod(dg,og){const de=GEL[dg],oe=GEL[og],same=(dg%2)===(og%2);
+if(de===oe)return same?'比肩':'劫財';if(GEN[de]===oe)return same?'食神':'傷官';
+if(KE[de]===oe)return same?'偏財':'正財';if(KE[oe]===de)return same?'七殺':'正官';return same?'偏印':'正印';}
+const godEl=(de,n)=>[de,GEN[de],KE[de],KEBY[de],GENBY[de]][Math.floor(TG10.indexOf(n)/2)];
+function godStats(pl,hasHour){const R={};TG10.forEach(n=>R[n]={w:0,pos:[],tou:false});let tot=0;
+const add=(g,w,pos,tou)=>{const t=tenGod(pl.dg,g);R[t].w+=w;tot+=w;if(!R[t].pos.includes(pos))R[t].pos.push(pos);if(tou)R[t].tou=true;};
+add(pl.yg,10,'年干',1);add(pl.mg,12,'月干',1);if(hasHour)add(pl.hg,10,'時干',1);
+const bz=(z,isM,p)=>{const ws=isM?[30,10,5]:[14,6,3];CANG[z].forEach((g,i)=>add(g,ws[i]||3,p+(i===0?'（主力）':'（暗藏）'),0));};
+bz(pl.yz,0,'年支');bz(pl.mz,1,'月支');bz(pl.dz,0,'日支');if(hasHour)bz(pl.hz,0,'時支');
+TG10.forEach(n=>R[n].pct=Math.round(R[n].w/tot*100));return R;}
+const rarity=p=>p>=20?'SSR':p>=11?'SR':p>=5?'R':p>0?'N':'L';
+
+/* ===== 排盤 ===== */
+function monthOrder(y,m,d){const t=Date.UTC(y,m-1,d);let best=null;
+for(let yy=y-1;yy<=y;yy++)for(let o=0;o<12;o++){const bt=Date.UTC(yy,JIE[o][0]-1,JIE[o][1]);if(bt<=t&&(!best||bt>best.bt))best={o,bt};}return best.o;}
+function approxPillars(y,m,d,h,mi,hasHour,rule){
+let ds=(hasHour&&h===23&&rule==='zichu')?1:0;const t=Date.UTC(y,m-1,d)+ds*864e5;
+const dayIdx=(((Math.floor(t/864e5)+17)%60)+60)%60,dg=dayIdx%10,dz=dayIdx%12;
+const ly=(m<2||(m===2&&d<4))?y-1:y,yi=((ly-4)%60+60)%60,yg=yi%10,yz=yi%12;
+const o=monthOrder(y,m,d),mz=(2+o)%12,mg=((yg%5)*2+2+o)%10;
+let hg=null,hz=null;
+if(hasHour){hz=(h===23)?0:Math.floor((h+1)/2)%12;let bd=dg;if(h===23&&rule==='zizheng')bd=(dg+1)%10;hg=((bd%5)*2+hz)%10;}
+return{yg,yz,mg,mz,dg,dz,hg,hz};}
+function calcPillars(y,m,d,h,mi,hasHour,rule){
+if(usePrecise()){try{const so=Solar.fromYmdHms(y,m,d,hasHour?h:12,hasHour?mi:0,0),ec=so.getLunar().getEightChar();
+ec.setSect(rule==='zichu'?1:2);const P=s=>[GAN.indexOf(s[0]),ZHI.indexOf(s[1])];
+const[yg,yz]=P(ec.getYear()),[mg,mz]=P(ec.getMonth()),[dg,dz]=P(ec.getDay());
+let hg=null,hz=null;if(hasHour){const[a,b]=P(ec.getTime());hg=a;hz=b;}
+return{yg,yz,mg,mz,dg,dz,hg,hz};}catch(e){}}
+return approxPillars(y,m,d,h,mi,hasHour,rule);}
+function calcDayun(pl,y,m,d,h,mi,hasHour,gender,rule){
+if(usePrecise()){try{const so=Solar.fromYmdHms(y,m,d,hasHour?h:12,hasHour?mi:0,0),ec=so.getLunar().getEightChar();
+ec.setSect(rule==='zichu'?1:2);const yun=ec.getYun(gender==='M'?1:0);
+const list=yun.getDaYun().slice(1,11).map(dy=>{const s=dy.getGanZhi();return{g:GAN.indexOf(s[0]),z:ZHI.indexOf(s[1]),age:dy.getStartAge()};});
+return{list,forward:yun.isForward(),startTxt:`出世後 ${yun.getStartYear()}年${yun.getStartMonth()}個月${yun.getStartDay()}日開始行第一步大運`};}catch(e){}}
+const dir=((pl.yg%2===0)===(gender==='M'))?1:-1,bt=Date.UTC(y,m-1,d);let bound=null;
+for(let yy=y-1;yy<=y+1;yy++)for(let o=0;o<12;o++){const t2=Date.UTC(yy,JIE[o][0]-1,JIE[o][1]);
+if(dir===1){if(t2>bt&&(bound===null||t2<bound))bound=t2;}else{if(t2<=bt&&(bound===null||t2>bound))bound=t2;}}
+const sa=Math.abs(bound-bt)/864e5/3,m60=((6*pl.mg-5*pl.mz)%60+60)%60,list=[];
+for(let k=1;k<=10;k++){const i2=((m60+dir*k)%60+60)%60;list.push({g:i2%10,z:i2%12,age:Math.round((sa+(k-1)*10)*10)/10});}
+return{list,forward:dir===1,startTxt:`大約 ${Math.floor(sa)}歲${Math.round((sa%1)*12)}個月開始行大運（近似計法）`};}
+function calcStrength(pl,hasHour){const de=GEL[pl.dg];let sup=0,tot=0;
+const add=(el,w)=>{tot+=w;if(el===de||GEN[el]===de)sup+=w;};
+add(GEL[pl.yg],10);add(GEL[pl.mg],12);if(hasHour)add(GEL[pl.hg],10);
+const bw=(z,isM)=>{const ws=isM?[30,10,5]:[14,6,3];CANG[z].forEach((g,i)=>add(GEL[g],ws[i]||3));};
+bw(pl.yz,0);bw(pl.mz,1);bw(pl.dz,0);if(hasHour)bw(pl.hz,0);
+const pct=Math.round(sup/tot*100),strong=pct>=50;
+const out=GEN[de],wea=KE[de],off=KEBY[de],res=GENBY[de];
+return{dEl:de,pct,strong,xi:strong?[out,wea,off]:[de,res],ji:strong?[res,de]:[off,wea,out]};}
+function calcElemDist(pl,hasHour){const acc={木:0,火:0,土:0,金:0,水:0};let tot=0;const add=(el,w)=>{acc[el]+=w;tot+=w;};
+add(GEL[pl.yg],10);add(GEL[pl.mg],12);add(GEL[pl.dg],10);if(hasHour)add(GEL[pl.hg],10);
+const bw=(z,isM)=>{const ws=isM?[30,10,5]:[14,6,3];CANG[z].forEach((g,i)=>add(GEL[g],ws[i]||3));};
+bw(pl.yz,0);bw(pl.mz,1);bw(pl.dz,0);if(hasHour)bw(pl.hz,0);
+const out={};for(const k in acc)out[k]=Math.round(acc[k]/tot*100);return out;}
+function flowElems(fl){const acc={木:0,火:0,土:0,金:0,水:0};const add=(el,w)=>acc[el]+=w;
+add(GEL[fl.yg],.9);add(ZEL[fl.yz],.9);add(GEL[fl.mg],1);add(ZEL[fl.mz],1);add(GEL[fl.dg],1.8);add(ZEL[fl.dz],1.8);add(GEL[fl.hg],.6);add(ZEL[fl.hz],.6);
+const tot=Object.values(acc).reduce((a,b)=>a+b,0);const out={};for(const k in acc)out[k]=Math.round(acc[k]/tot*100);return out;}
+function tiaohou(pl,dist){const mz=pl.mz;let need,txt;
+if([11,0,1].includes(mz)){need='火';txt='你喺冬天出世，命盤偏凍，最需要「火」嚟暖身。';}
+else if([5,6,7].includes(mz)){need='水';txt='你喺夏天出世，命盤偏熱偏乾，最需要「水」嚟降溫。';}
+else if([2,3,4].includes(mz)){need='火';txt='你喺春天出世，木氣旺，帶少少「火」會令你更有光彩。';}
+else{need='火';txt='你喺秋天出世，金氣旺又偏乾冷，帶少少「火」可以將你煉成器（亦要少少水潤）。';}
+const have=dist[need];
+return txt+(have<=10?`你命中${need}好少（約${have}%），所以更要補：${need==='火'?'多曬太陽、着暖色、食暖身嘢、早瞓':'多飲水、着藍黑色、食滋潤嘢、唔好捱夜'}。`:`你命中已經有${need}（約${have}%），問題唔大。`);}
+function genTitles(S,dist,sh,combos,pl){const ci=CLASS_INFO[pl.dg],names=sh.map(s=>s.name),sub=[];
+if(names.includes('天乙貴人'))sub.push('天佑之身');if(names.includes('文昌貴人'))sub.push('文曲附體');
+if(names.includes('天德貴人')||names.includes('月德貴人'))sub.push('德光護體');if(names.includes('太極貴人'))sub.push('玄門有緣');
+if(names.includes('國印貴人'))sub.push('執印者');if(names.includes('福星貴人'))sub.push('福澤自來');
+if(names.includes('驛馬'))sub.push('四方行者');if(names.includes('桃花'))sub.push('人緣磁石');
+if(combos.some(c=>c.kind==='三合'||c.kind==='三會'))sub.push('聚勢成局');
+if(combos.filter(c=>c.kind==='沖').length>=2)sub.push('風浪磨礪');
+if(Object.values(dist).every(v=>v>=12&&v<=28))sub.push('五行調和');
+return{main:ci.title,cls:ci.cls,line:ci.line,sub,sub2:SUBCLASS[pl.dg][S.strong?0:1]+ci.cls,
+sub2line:S.strong?'能量充足版：底子好，適合主動出擊、向外發揮。':'需要補給版：先休息夠、搵隊友幫手，儲夠能量先開大招。'};}
+
+/* ===== 神煞 ===== */
+function calcShensha(pl,hasHour){const res=[],bs=[[pl.yz,'年支'],[pl.mz,'月支'],[pl.dz,'日支']];if(hasHour)bs.push([pl.hz,'時支']);
+const ss=[[pl.yg,'年干'],[pl.mg,'月干'],[pl.dg,'日干']];if(hasHour)ss.push([pl.hg,'時干']);
+const chk=(tg,name)=>bs.forEach(([z,pos])=>{if((tg||[]).includes(z))res.push({name,pos,ch:ZHI[z],z});});
+chk(TIANYI[pl.dg],'天乙貴人');chk(TAIJI[pl.dg],'太極貴人');chk([WENCHANG[pl.dg]],'文昌貴人');chk(FUXING[pl.dg],'福星貴人');chk([GUOYIN[pl.dg]],'國印貴人');
+const td=TIANDE[(pl.mz-2+12)%12];ss.forEach(([g,pos])=>{if(GAN[g]===td)res.push({name:'天德貴人',pos,ch:td});});
+bs.forEach(([z,pos])=>{if(ZHI[z]===td)res.push({name:'天德貴人',pos,ch:td,z});});
+const yd=YUEDE(pl.mz);ss.forEach(([g,pos])=>{if(GAN[g]===yd)res.push({name:'月德貴人',pos,ch:yd});});
+[['年支',pl.yz],['日支',pl.dz]].forEach(([base,z0])=>{const hm=HORSE(z0),pt=PEACH(z0);
+bs.forEach(([bz,pos])=>{if(bz===hm)res.push({name:'驛馬',pos,ch:ZHI[bz],z:bz});if(bz===pt)res.push({name:'桃花',pos,ch:ZHI[bz],z:bz});});});
+const seen={},ded=[];res.forEach(r=>{const k=r.name+r.pos;if(!seen[k]){seen[k]=1;ded.push(r);}});return ded;}
+function ssMk(pl,hasHour){const bs=[[pl.yz,'年支'],[pl.mz,'月支'],[pl.dz,'日支']];if(hasHour)bs.push([pl.hz,'時支']);
+const posOf=z=>bs.filter(b=>b[0]===z).map(b=>b[1]);return(name,zs,base)=>({name,base,cands:[...new Set(zs)].map(z=>({z,poss:posOf(z)}))});}
+function shenshaFull(pl,hasHour){const mk=ssMk(pl,hasHour);return[
+mk('天乙貴人',TIANYI[pl.dg]||[],'按日干'+GAN[pl.dg]),mk('太極貴人',TAIJI[pl.dg]||[],'按日干'+GAN[pl.dg]),
+mk('文昌貴人',[WENCHANG[pl.dg]],'按日干'+GAN[pl.dg]),mk('福星貴人',FUXING[pl.dg]||[],'按日干'+GAN[pl.dg]),
+mk('國印貴人',[GUOYIN[pl.dg]],'按日干'+GAN[pl.dg]),mk('驛馬',[HORSE(pl.yz),HORSE(pl.dz)],'按年支／日支'),mk('桃花',[PEACH(pl.yz),PEACH(pl.dz)],'按年支／日支')];}
+function shenshaFullAdv(pl,hasHour){const mk=ssMk(pl,hasHour),out=[];const YANGREN={0:3,2:6,4:6,6:9,8:0};
+if(YANGREN[pl.dg]!==undefined)out.push(mk('羊刃',[YANGREN[pl.dg]],'按日干'+GAN[pl.dg]));
+out.push(mk('華蓋',[HUAGAI(pl.yz),HUAGAI(pl.dz)],'按年支／日支'));
+const gq={11:[2,10],0:[2,10],1:[2,10],2:[5,1],3:[5,1],4:[5,1],5:[8,4],6:[8,4],7:[8,4],8:[11,7],9:[11,7],10:[11,7]};const[gu,gua]=gq[pl.yz];
+out.push(mk('孤辰',[gu],'按年支'));out.push(mk('寡宿',[gua],'按年支'));
+out.push(mk('紅鸞',[(3-pl.yz+12)%12],'按年支'));out.push(mk('天喜',[(9-pl.yz+12)%12],'按年支'));
+let di=0;for(let i=0;i<60;i++)if(i%10===pl.dg&&i%12===pl.dz){di=i;break;}
+const xun=Math.floor(di/10)*10,k1=(xun+10)%12,k2=(xun+11)%12,o=mk('空亡',[k1,k2],'按日柱');o.cands.forEach(c=>c.poss=c.poss.filter(p=>p!=='日支'));out.push(o);return out;}
+function ssTrig(z,flows){if(z===undefined)return null;for(const f of flows){if(f.z===z)return{txt:f.layer+'行到'+ZHI[f.z],layer:f.layer};
+if(f.z===chongOf(z))return{txt:f.layer+ZHI[f.z]+'撞醒',layer:f.layer};if(HE6[z]===f.z)return{txt:f.layer+ZHI[f.z]+'合醒',layer:f.layer};}return null;}
+
+/* ===== 命局格局 ===== */
+function natalCombos(pl,hasHour){const bs=[[pl.yz,'年'],[pl.mz,'月'],[pl.dz,'日']];if(hasHour)bs.push([pl.hz,'時']);
+const gs=[[pl.yg,'年'],[pl.mg,'月'],[pl.dg,'日']];if(hasHour)gs.push([pl.hg,'時']);const out=[];
+for(let i=0;i<gs.length;i++)for(let j=i+1;j<gs.length;j++){const[a,pa]=gs[i],[b,pb]=gs[j];
+if(Math.abs(a-b)===5)out.push({kind:'干合',label:`${GAN[a]}${GAN[b]}合（化${['土','金','水','木','火'][Math.min(a,b)]}）`,members:[],pos:`${pa}柱×${pb}柱`});}
+for(let i=0;i<bs.length;i++)for(let j=i+1;j<bs.length;j++){const[a,pa]=bs[i],[b,pb]=bs[j],pos=`${pa}柱×${pb}柱`;
+if(b===chongOf(a))out.push({kind:'沖',label:`${ZHI[a]}${ZHI[b]}相撞（沖）`,members:[a,b],pos});
+if(HE6[a]===b)out.push({kind:'六合',label:`${ZHI[a]}${ZHI[b]}相合${HE6EL(a,b)?'（化'+HE6EL(a,b)+'）':''}`,members:[a,b],pos});
+if(HAI[a]===b)out.push({kind:'害',label:`${ZHI[a]}${ZHI[b]}暗損（害）`,members:[a,b],pos});
+if(isXing(a,b))out.push({kind:'刑',label:a===b?`${ZHI[a]}自己磨自己（自刑）`:`${ZHI[a]}${ZHI[b]}相磨（刑）`,members:[a,b],pos});
+const hh=halfHe(a,b);if(hh)out.push({kind:'半合',label:`${ZHI[a]}${ZHI[b]}半合${hh.el}`,members:[a,b],pos,trio:hh.trio});}
+const set=[...new Set(bs.map(x=>x[0]))];
+SANHE.forEach(t=>{if(t.slice(0,3).every(z=>set.includes(z)))out.push({kind:'三合',label:`${ZHI[t[0]]}${ZHI[t[1]]}${ZHI[t[2]]}三合${t[3]}局`,members:t.slice(0,3),pos:'成個命盤'});});
+SANHUI.forEach(t=>{if(t.slice(0,3).every(z=>set.includes(z)))out.push({kind:'三會',label:`${ZHI[t[0]]}${ZHI[t[1]]}${ZHI[t[2]]}三會${t[3]}方`,members:t.slice(0,3),pos:'成個命盤'});});
+return out;}
+function markTriggers(combos,flows){combos.forEach(c=>{c.trig=null;c.trigLayer=null;
+for(const f of flows){for(const zm of c.members){
+if(f.z===chongOf(zm)){c.trig=`${f.layer}${ZHI[f.z]}撞醒${ZHI[zm]}`;c.trigLayer=f.layer;break;}
+if(f.z===zm){c.trig=`${f.layer}${ZHI[f.z]}重疊引動`;c.trigLayer=f.layer;break;}}
+if(!c.trig&&c.trio){const miss=c.trio.slice(0,3).filter(x=>!c.members.includes(x));
+if(miss.length===1&&f.z===miss[0]){c.trig=`${f.layer}${ZHI[f.z]}補位成團`;c.trigLayer=f.layer;}}
+if(c.trig)break;}});}
+
+/* ===== 風險 ===== */
+const CATS=[['law','⚖️','法律文件'],['travel','🚗','出行安全'],['home','🏠','家居'],['wealth','💰','錢財'],['social','🤝','人際'],['health','❤️','健康']];
+const ADVICE={law:'簽嘢、答應人之前睇清楚條款，唔好同人硬碰，交通規則守足',travel:'出門預鬆啲時間，行路揸車小心，睇實電話銀包',home:'留意屋企水電爐火，出門檢查門窗，高處攞嘢小心',wealth:'唔好衝動使大錢、賭錢或投資，銀包卡數睇實',social:'少講是非，有唔同意見笑住傾，唔好鬧交',health:'早啲休息、食清淡啲，舊患唔好逞強，攰就唞'};
+const ENCOURAGE={law:'文件運順：啱處理合約、申請、續期',travel:'出行順利：啱出差、旅行、探朋友、見客',home:'家宅平穩：啱執屋、維修、約人上屋企',wealth:'財運平穩：啱做預算、格價、整理戶口',social:'人緣好：主動約朋友、識新朋友、傾合作',health:'狀態好：啱開始做運動、建立新習慣'};
+const grp2=z=>[2,8,5,11].includes(z)?0:[0,6,3,9].includes(z)?1:2;
+function flowRisk(natalBs,flows,S,horseSet,peachSet){const cats={},why={};CATS.forEach(c=>{cats[c[0]]=0;why[c[0]]=[];});const evs=[],notes=[];
+flows.forEach(f=>natalBs.forEach(nb=>{const rels=[];
+if(f.z===chongOf(nb.z))rels.push(['沖',3]);if(HE6[nb.z]===f.z)rels.push(['合',0]);if(HAI[nb.z]===f.z)rels.push(['害',1.5]);
+if(isXing(f.z,nb.z))rels.push(['刑',2.2]);if(halfHe(f.z,nb.z))rels.push(['半合',0]);
+rels.forEach(([t,sev])=>{const nel=ZEL[nb.z],xj=S.xi.includes(nel)?'喜':S.ji.includes(nel)?'忌':'閒';
+evs.push({layer:f.layer,fz:f.z,t,nb,xj});const P=POSP[nb.pos];
+if(t==='合'||t==='半合'){notes.push(`${f.layer}${ZHI[f.z]}${RELP[t]}你嘅${P}${ZHI[nb.z]}：${xj==='喜'?'幫你嘅能量被綁住，做事要主動推一推':xj==='忌'?'唔幫你嘅能量被綁住，反而安穩':'人事多牽絆，亦係合作機會'}`);return;}
+const p=sev*f.w*(xj==='喜'?1.25:xj==='忌'?0.8:1),zi=nb.z,g4=grp2(zi);
+const R=(k,v,txt)=>{cats[k]+=v;if(v>=0.5)why[k].push(txt);};
+const base=`${f.layer}${ZHI[f.z]}${RELP[t]}你嘅${P}（${ZHI[nb.z]}）${xj==='喜'?'——被撞嘅係幫你嘅能量，影響大啲':xj==='忌'?'——被撞嘅係唔幫你嘅能量，影響細啲':''}`;
+if(g4===0)R('travel',p,base);if(g4===1){R('social',p*0.7,base);R('health',p*0.4,base);}if(g4===2){R('home',p*0.7,base);R('wealth',p*0.5,base);}
+if(nb.pos==='日支'){R('home',p*0.5,base);R('health',p*0.5,base);}if(nb.pos==='時支')R('health',p*0.3,base);
+if(horseSet.has(zi))R('travel',p*0.8,base+'｜移動星被引動，多奔波變動');if(peachSet.has(zi))R('social',p*0.8,base+'｜桃花被引動，感情人緣有波動');
+const hid=CANG[zi].map(g2=>GEL[g2]);if(hid.includes(KEBY[S.dEl]))R('law',p*0.7,base+'｜入面藏住「壓力星」，留意規則官非');
+if(hid.includes(KE[S.dEl]))R('wealth',p*0.7,base+'｜入面藏住「錢財星」，留意破財');
+if(t==='刑'){R('law',p*0.6,base);R('health',p*0.3,base);}if(t==='害')R('social',p*0.6,base);});}));
+return{cats,why,evs,notes};}
+let sens='std';const SENSF={con:0.7,std:1,loose:1.45};const fSens=()=>SENSF[sens]||1;
+const lvl=v=>{const f=fSens();return v<1.6*f?0:v<3.6*f?1:2;};
+function setSens(v){sens=v;S_set('bazi_sens',v);renderAll();}
+function hourWatch(natalBs,todayDz){const out=[];for(let z=0;z<12;z++){const rs=[];let sc=0;
+natalBs.forEach(nb=>{if(z===chongOf(nb.z)){rs.push('撞'+POSP[nb.pos]);sc+=3;}else if(isXing(z,nb.z)){rs.push('磨'+POSP[nb.pos]);sc+=2;}else if(HAI[nb.z]===z){rs.push('損'+POSP[nb.pos]);sc+=1.5;}});
+if(z===chongOf(todayDz)){rs.push('撞今日');sc+=2;}out.push({z,rs,sc});}return out;}
+const hwLvl=sc=>{const f=fSens();return sc===0?0:sc<3.5*f?1:2;};
+function sevenDay(natalBs,S){const out=[];for(let k=0;k<7;k++){const dt=new Date();dt.setDate(dt.getDate()+k);
+const y=dt.getFullYear(),m=dt.getMonth()+1,d=dt.getDate(),di=(((Math.floor(Date.UTC(y,m-1,d)/864e5)+17)%60)+60)%60,z=di%12;let sc=0;const ns=[];
+natalBs.forEach(nb=>{if(z===chongOf(nb.z)){sc+=3*(S.xi.includes(ZEL[nb.z])?1.3:1);ns.push('撞'+nb.pos[0]+'柱');}else if(isXing(z,nb.z)){sc+=2.2;ns.push('磨'+nb.pos[0]+'柱');}else if(HAI[nb.z]===z){sc+=1.5;ns.push('損'+nb.pos[0]+'柱');}});
+out.push({m,d,di,sc,ns,dow:'日一二三四五六'[dt.getDay()],k});}return out;}
+function flowTheme(g,z,natalBs,S,label){const rels=[];natalBs.forEach(nb=>{const P=POSP[nb.pos];
+if(z===chongOf(nb.z))rels.push(`撞你嘅${P}——${nb.pos==='日支'?'感情、屋企容易有變化':nb.pos==='月支'?'工作環境容易有變動':nb.pos==='年支'?'長輩、家族嘅事多咗':'子女、下屬嘅事多咗'}`);
+else if(HE6[nb.z]===z)rels.push(`同你嘅${P}相合——人緣好，容易有合作機會`);
+else if(isXing(z,nb.z))rels.push(`同你嘅${P}相磨——要守規矩，執好手尾`);
+else if(HAI[nb.z]===z)rels.push(`暗損你嘅${P}——提防小人，合作睇清楚`);});
+const el=ZEL[z],xj=S.xi.includes(el)?`帶嚟你需要嘅「${el}」能量 👍 做嘢順手啲，可以主動出擊`:S.ji.includes(el)?`帶嚟你唔太需要嘅「${el}」能量，會攰啲，穩陣行事`:`帶嚟「${el}」能量，對你中性，平平穩穩`;
+return`<b>${label}（${GAN[g]}${ZHI[z]}）</b>：${xj}。<br>・${rels.length?rels.join('<br>・'):'同你命盤冇乜碰撞，正常發揮就得。'}`;}
+function heHunAnalysis(A,Ah,B,Bh){const good=[],bad=[];let score=0;
+if(Math.abs(A.dg-B.dg)===5){score+=3;good.push(`兩個人嘅「自己」天干相合（${GAN[A.dg]}${GAN[B.dg]}）：天生投契，容易互相吸引`);}
+const ea=GEL[A.dg],eb=GEL[B.dg];
+if(GEN[ea]===eb||GEN[eb]===ea)good.push(`五行相生（${ea}↔${eb}）：一方自然想照顧另一方`);
+else if(KE[ea]===eb||KE[eb]===ea)bad.push(`五行相剋（${ea}↔${eb}）：相處有張力，亦係吸引力，要輪流讓步`);
+else if(ea===eb)good.push(`五行相同（都係${ea}）：好似戰友咁夾，但要製造新鮮感`);
+const rel=(a,b)=>{if(HE6[a]===b)return['相合',2.5];if(b===chongOf(a))return['相撞',-3];if(isXing(a,b))return['相磨',-2];if(HAI[a]===b)return['暗損',-2];if(halfHe(a,b))return['半合',1.5];return null;};
+const dd=rel(A.dz,B.dz);if(dd){score+=dd[1]*1.5;const M={'相合':'相處黏得埋，屋企有溫度','半合':'相處有默契','相撞':'生活節奏唔同，畀對方多啲空間反而更穩','相磨':'容易執著，講感受好過講道理','暗損':'容易因小事積怨，有嘢即刻講'};
+(dd[1]>0?good:bad).push(`伴侶位（日支）${ZHI[A.dz]}×${ZHI[B.dz]} ${dd[0]}——${M[dd[0]]}`);}
+const yy=rel(A.yz,B.yz);if(yy){score+=yy[1];(yy[1]>0?good:bad).push(`家庭位（年支）${ZHI[A.yz]}×${ZHI[B.yz]} ${yy[0]}——${yy[1]>0?'家庭背景、價值觀容易夾':'生活習慣、原生家庭要多磨合'}`);}
+const Abs=[A.yz,A.mz,A.dz];if(Ah)Abs.push(A.hz);const Bbs=[B.yz,B.mz,B.dz];if(Bh)Bbs.push(B.hz);
+let he=0,cl=0;Abs.forEach(a=>Bbs.forEach(b=>{const r=rel(a,b);if(r){if(r[1]>0)he++;else cl++;}}));score+=he*0.5-cl*0.5;
+return{good,bad,he,cl,grade:score>=5?'🟢 好夾！':score>=1?'🟢 整體和諧':score>=-2?'🟡 有合有撞，磨合型':'🔴 碰撞多，要多包容溝通',score};}
+
+/* ===== 儲存 ===== */
+let profile=null,profile2=null,canStore=true,advSS=false,CTX=null;
+function S_get(k){try{return localStorage.getItem(k);}catch(e){canStore=false;return null;}}
+function S_set(k,v){try{localStorage.setItem(k,v);}catch(e){canStore=false;}}
+function toggleAdvSS(el){advSS=el.checked;S_set('bazi_advss',advSS?'1':'0');renderAll();}
+const CITIES=[['香港',114.17],['澳門',113.55],['台北',121.56],['高雄',120.30],['北京',116.41],['上海',121.47],['廣州',113.26],['深圳',114.06],['成都',104.07],['西安',108.94],['新加坡',103.85],['吉隆坡',101.69],['東京',139.69],['首爾',126.98],['倫敦',-0.13],['巴黎',2.35],['紐約',-74.01],['三藩市',-122.42],['洛杉磯',-118.24],['溫哥華',-123.12],['多倫多',-79.38],['悉尼',151.21],['墨爾本',144.96]];
+CITIES.forEach(c=>{const o=document.createElement('option');o.value=c[1];o.textContent=c[0];$('bcity').appendChild(o);});
+const HOUR_OPTS=v=>['-1|唔知','23|夜子 23–24','0|早子 0–1','2|丑 1–3','4|寅 3–5','6|卯 5–7','8|辰 7–9','10|巳 9–11','12|午 11–13','14|未 13–15','16|申 15–17','18|酉 17–19','20|戌 19–21','22|亥 21–23'].map(s=>{const[val,txt]=s.split('|');return`<option value="${val}"${String(v)===val?' selected':''}>${txt}</option>`;}).join('');
+const LMN=['正月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+const CNd=['','一','二','三','四','五','六','七','八','九','十'];
+const ldn=d=>d<=10?'初'+CNd[d]:d<20?'十'+CNd[d-10]:d===20?'二十':d<30?'廿'+CNd[d-20]:'三十';
+(function(){const ms=$('lmonth'),ds=$('lday');LMN.forEach((n,i)=>{const o=document.createElement('option');o.value=i+1;o.textContent=n;ms.appendChild(o);});
+for(let d=1;d<=30;d++){const o=document.createElement('option');o.value=d;o.textContent=ldn(d);ds.appendChild(o);}})();
+function calSwitch(){const lun=$('caltype').value==='lunar';$('solarBox').style.display=lun?'none':'';$('lunarBox').style.display=lun?'':'none';}
+function analyze(){const cal=$('caltype').value;let bd,ldisp='';
+if(cal==='lunar'){if(!usePrecise()){alert('農曆輸入需要曆法引擎（請確保有網絡再重新整理）');return;}
+const ly=+$('lyear').value,lm=+$('lmonth').value,ld=+$('lday').value,leap=$('lleap').checked;
+if(!ly||!lm||!ld){alert('請輸入完整農曆日期');return;}
+try{const lun=Lunar.fromYmd(ly,leap?-lm:lm,ld),sol=lun.getSolar();
+bd=`${sol.getYear()}-${String(sol.getMonth()).padStart(2,'0')}-${String(sol.getDay()).padStart(2,'0')}`;ldisp=`${ly}年${leap?'閏':''}${LMN[lm-1]}${ldn(ld)}`;
+}catch(e){alert('農曆日期無效（該月可能冇呢日，或該年冇呢個閏月）');return;}}
+else{bd=$('bdate').value;if(!bd){alert('請輸入出生日期');return;}}
+profile={bd,cal,ldisp,lyear:$('lyear').value,lmonth:$('lmonth').value,lday:$('lday').value,lleap:$('lleap').checked,
+bh:+$('bhour').value,gender:$('gender').value,rule:$('rule').value,bt:$('btime').value,lon:$('blon').value||$('bcity').value,tz:+$('btz').value||8};
+S_set('bazi_profile',JSON.stringify(profile));
+$('storeWarn').textContent=canStore?'':'⚠️ 呢個環境儲存唔到資料';
+lastNpc='';renderAll();showTab('home');confetti();toast('⚔️ 角色生成完成！冒險開始');}
+function clearData(){try{['bazi_profile','bazi_p2'].forEach(k=>localStorage.removeItem(k));}catch(e){}profile=null;profile2=null;window.FX_BIAS=null;renderAll();toast('資料已清除');}
+function doHeHun(){const d=$('p2date').value;if(!d){alert('請輸入對方出生日期');return;}
+profile2={bd:d,bh:+$('p2hour').value};S_set('bazi_p2',JSON.stringify(profile2));renderAll();toast('💞 合盤完成');}
+function clearHeHun(){profile2=null;try{localStorage.removeItem('bazi_p2');}catch(e){}renderAll();}
+function goSetup(){showTab('chart');setTimeout(()=>$('formPanel').scrollIntoView({behavior:'smooth',block:'start'}),250);}
+
+/* ===== 天氣 ===== */
+let WX=null,LOC=null,WXERR='';
+const WXC={0:['晴朗','☀️'],1:['大致天晴','🌤️'],2:['部分多雲','⛅'],3:['密雲','☁️'],45:['有霧','🌫️'],48:['霧凇','🌫️'],51:['微毛毛雨','🌦️'],53:['毛毛雨','🌦️'],55:['密毛毛雨','🌧️'],56:['凍毛毛雨','🌧️'],57:['凍毛毛雨','🌧️'],61:['小雨','🌧️'],63:['中雨','🌧️'],65:['大雨','🌧️'],66:['凍雨','🌧️'],67:['大凍雨','🌧️'],71:['小雪','🌨️'],73:['中雪','🌨️'],75:['大雪','❄️'],77:['雪粒','🌨️'],80:['驟雨','🌦️'],81:['大驟雨','🌧️'],82:['猛烈驟雨','⛈️'],85:['陣雪','🌨️'],86:['大陣雪','❄️'],95:['雷暴','⛈️'],96:['雷暴夾冰雹','⛈️'],99:['強雷暴夾冰雹','⛈️']};
+const isRain=c=>(c>=51&&c<=67)||(c>=80&&c<=82)||c>=95,isSnow=c=>(c>=71&&c<=77)||c===85||c===86;
+const uvLv=u=>u<3?['低','#43e08a']:u<6?['中','#ffd95e']:u<8?['高','#ff9a3c']:u<11?['甚高','#ff5577']:['極高','#c77dff'];
+async function fetchWeather(lat,lon){
+const u=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,uv_index,precipitation_probability&daily=uv_index_max,temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=auto&forecast_days=2`;
+const r=await fetch(u);if(!r.ok)throw new Error('wx');const j=await r.json();const cu=j.current,H=j.hourly,Dd=j.daily;
+let hi=H.time.findIndex(t=>t.slice(0,13)===cu.time.slice(0,13));if(hi<0)hi=0;
+const hrs=[];for(let i=hi;i<Math.min(hi+12,H.time.length);i++)hrs.push({h:+H.time[i].slice(11,13),code:H.weather_code[i],t:H.temperature_2m[i],pop:H.precipitation_probability[i]??0,uv:H.uv_index[i]??0});
+const today=Dd.time[0],uvh=H.time.map((t,i)=>[t,H.uv_index[i]]).filter(([t,u])=>t.startsWith(today)&&u>=6);
+const uvWin=uvh.length?`${uvh[0][0].slice(11,16)}–${String(+uvh[uvh.length-1][0].slice(11,13)+1).padStart(2,'0')}:00`:'';
+return{lat,lon,t:cu.temperature_2m,rh:Math.round(cu.relative_humidity_2m),app:cu.apparent_temperature,isDay:!!cu.is_day,prcp:cu.precipitation||0,code:cu.weather_code,wind:cu.wind_speed_10m,
+uv:Math.round((H.uv_index[hi]||0)*10)/10,uvMax:Math.round((Dd.uv_index_max[0]||0)*10)/10,pop12:Math.max(0,...hrs.map(x=>x.pop||0)),
+tmax:Dd.temperature_2m_max[0],tmin:Dd.temperature_2m_min[0],sunrise:(Dd.sunrise[0]||'').slice(11,16),sunset:(Dd.sunset[0]||'').slice(11,16),hrs,uvWin,fetched:Date.now()};}
+async function loadWx(force){if(!LOC)return;
+try{const c=JSON.parse(S_get('bazi_wx')||'null');
+if(!force&&c&&c.lat===LOC.lat&&c.lon===LOC.lon&&Date.now()-c.fetched<30*60e3)WX=c;
+else{WX=await fetchWeather(LOC.lat,LOC.lon);S_set('bazi_wx',JSON.stringify(WX));}WXERR='';}
+catch(e){WXERR='⚠️ 天氣載入失敗（請檢查網絡），稍後會自動再試。';}
+renderAll();}
+function locate(force){const saved=JSON.parse(S_get('bazi_loc')||'null');
+if(saved&&!force){LOC=saved;loadWx();return;}
+WXERR='📡 定位中…';renderWeather(CTX);
+if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>setLoc(p.coords.latitude,p.coords.longitude,null,true),()=>ipLocate(),{timeout:8000,maximumAge:6e5});else ipLocate();}
+async function ipLocate(){try{const r=await fetch('https://ipapi.co/json/');const j=await r.json();if(j&&j.latitude)return setLoc(j.latitude,j.longitude,(j.city||'')+'（IP估算）');}catch(e){}setLoc(22.32,114.17,'香港（預設）');}
+async function setLoc(lat,lon,name,rev){
+if(!name&&rev){try{const r=await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh-Hant`);const j=await r.json();name=j.city||j.locality||j.principalSubdivision||'';}catch(e){}}
+LOC={lat:Math.round(lat*1000)/1000,lon:Math.round(lon*1000)/1000,name:name||`${(+lat).toFixed(2)}, ${(+lon).toFixed(2)}`};S_set('bazi_loc',JSON.stringify(LOC));loadWx(true);}
+async function searchCity(){const q=($('wxq')||{}).value;if(!q||!q.trim())return;
+try{const r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q.trim())}&count=1&language=zh`);const j=await r.json();
+if(!j.results||!j.results.length){alert('搵唔到呢個地方，試下用英文（如 Hong Kong）');return;}
+const c=j.results[0];setLoc(c.latitude,c.longitude,c.name+(c.country?'・'+c.country:''));toast('📍 已切換到 '+c.name);}catch(e){alert('搜尋失敗，請檢查網絡');}}
+function weatherElems(W){const r=[];
+if(W.t>=30||W.uvMax>=8)r.push(['火','好熱／太陽猛，火氣旺']);if(W.rh>=80&&W.t>=24)r.push(['土','又濕又熱，濕氣重']);
+if(isRain(W.code)||isSnow(W.code))r.push(['水','落雨落雪，水氣重']);else if(W.t<=12)r.push(['水','天凍，寒氣重']);
+if(W.rh<=45)r.push(['金','空氣乾燥']);if(W.wind>=30)r.push(['木','大風']);return r;}
+function applyWxRisk(risk){if(!WX)return;const W=WX,A=(k,v,t)=>{risk.cats[k]+=v;risk.why[k].push('🌦️ 天氣：'+t);};
+if(W.code>=95)A('travel',2.2,'雷暴，出行危險');else if([65,67,82].includes(W.code))A('travel',1.6,'大雨，路滑睇唔清');else if(isRain(W.code)||W.pop12>=70)A('travel',.8,'有雨，路面濕滑');
+if(W.uvMax>=8)A('health',1.2,`紫外線${W.uvMax}好猛，小心曬傷`);if(W.t>=33||W.app>=35)A('health',1.3,'酷熱，小心中暑');
+if(W.app<=8)A('health',1,'好凍，小心感冒');if(W.wind>=50)A('home',1,'大風，留意門窗同露台物件');}
+function wxBuffs(W,S){const b=[];if(!W)return b;
+if(W.uvMax>=8)b.push(['☀️','曬傷警戒','bad']);else if(W.uvMax>=6)b.push(['🔆','強光','warn']);
+if(isRain(W.code))b.push(['🌧️','濕身','warn']);if(W.code>=95)b.push(['⚡','雷擊警戒','bad']);
+if(W.app>=33)b.push(['🥵','炎熱','bad']);if(W.app<=10)b.push(['🥶','寒冷','warn']);
+if(S){const seen={};weatherElems(W).forEach(([e])=>{if(seen[e])return;seen[e]=1;if(S.xi.includes(e))b.push(['✨',`天氣幫你（${e}）`,'good']);else if(S.ji.includes(e))b.push(['🌀',`天氣唔夾（${e}）`,'warn']);});}
+if(!b.length)b.push(['🍃','天朗氣清','good']);return b;}
+const UVDEEP={木:'墨綠、深綠',火:'酒紅、深磚紅',土:'深啡、咖啡',金:'炭灰、深銀灰',水:'海軍藍、黑'};
+const UVLIGHT={木:'薄荷綠、淺青',火:'珊瑚橙、淺粉紅',土:'卡其、米色',金:'白、米白',水:'淺藍、灰藍'};
+const PAL={木:{main:'#3f8f5a',light:'#a8cbaa',dark:'#2b5e3c',name:'綠色系'},火:{main:'#c74b3c',light:'#e8a87c',dark:'#8f2f26',name:'紅橙色系'},
+土:{main:'#b08542',light:'#e3cfa5',dark:'#6e4f27',name:'啡色大地色系'},金:{main:'#d8d3c5',light:'#f2efe6',dark:'#6f6b63',name:'白色／銀灰色系'},水:{main:'#33628f',light:'#8fb3d1',dark:'#1a2f4a',name:'藍黑色系'}};
+function outingAdvice(W,C){const S=C?C.S:null,xi=S?S.xi[0]:null,xi2=S?(S.xi[1]||S.xi[0]):null,items=[];let umb=null;
+const rainNow=isRain(W.code)||W.prcp>0;
+if(W.code>=95)items.push(['⛈️','雷暴警告','有雷暴：盡量留喺室內，唔好去空曠地方、山頂、水邊，唔好喺大樹下避雨；留意天文台警告。']);
+if(rainNow||W.pop12>=60){umb='rain';items.push(['☂️','一定要帶遮',`${rainNow?'而家落緊雨':'未來12小時好大機會落雨（'+W.pop12+'%）'}${W.wind>=35?'，風大要揀耐風嘅縮骨遮':''}；著防滑鞋，電話銀包做好防水。`]);}
+else if(W.pop12>=30){umb='rain';items.push(['🌂','袋定把縮骨遮',`有${W.pop12}%機會落驟雨，帶把細遮以防萬一${W.uvMax>=6?'（晴雨兩用嘅最抵，仲擋到UV）':''}。`]);}
+else if(W.uvMax>=6&&W.isDay){umb='sun';items.push(['⛱️','帶太陽遮','唔會落雨但太陽好猛，帶把內層黑色（UPF50+）嘅太陽遮，擋UV又涼快。']);}
+else items.push(['🌤️','遮','今日唔使帶遮，輕裝出門。']);
+const[ul]=uvLv(W.uvMax),win=W.uvWin||'11:00–15:00';let uvt;
+if(W.uvMax<3)uvt='紫外線低，一般唔使特別防曬。';else if(W.uvMax<6)uvt='塗SPF30以上防曬，喺街每2小時補一次；中午戴帽。';
+else if(W.uvMax<8)uvt=`紫外線高：塗SPF50+、戴闊邊帽同太陽眼鏡；${win} 呢段時間盡量唔好喺街曬。`;
+else uvt=`紫外線${ul}：曬一陣已經會曬傷！${win} 盡量留室內；防曬、帽、太陽眼鏡、長袖一樣都唔可以少。`;
+items.push(['🕶️',`紫外線 ${W.uvMax}（${ul}）`,uvt]);
+let ct;if(W.uvMax>=3){ct='防UV揀衫秘訣：<b>深色、鮮色、布料織得密</b>擋UV最好；白色薄衫最透UV（濕咗更差）。';
+if(xi)ct+=`配合你嘅幸運五行「${xi}」，今日最好著 <b class="wx${xi}">${UVDEEP[xi]}</b>${xi==='金'?'（你嘅幸運色係白色，但白色薄衫擋唔到UV，揀有「UPF50+」標籤嘅白色防曬衣，或者改著深灰）':''}，下身配 <b class="wx${xi2}">${UVDEEP[xi2]}</b>。`;
+if(W.t>=30)ct+='不過深色會吸熱，天氣熱就揀寬身、透氣、有UPF標籤嘅防曬衣。';}
+else ct=`紫外線唔強，揀色純粹睇運：${xi?`<b class="wx${xi}">${UVLIGHT[xi]}</b>都好啱你`:'隨心配搭'}。`;
+items.push(['👕','防UV衫顏色',ct]);
+const a=W.app;const tt=a<8?'好凍：著厚羽絨或大褸，加頸巾手套，護住頭頸同腳。':a<14?'凍：毛衣加外套，一層層著方便加減。':a<20?'有啲涼：長袖加薄外套，早晚記得加衫。':a<27?'舒服：短袖或薄長袖；入室冷氣大可帶件薄外套。':a<32?'熱：透氣短袖，隨身帶水。':'好熱！防中暑：寬鬆透氣衫，飲夠水，唔好正午做劇烈運動。';
+items.push(['🌡️',`體感 ${Math.round(a)}°C`,tt]);
+if(W.rh>=80)items.push(['💧',`濕度 ${W.rh}%`,'好潮濕：著快乾衫、防滑鞋；濕氣重易身重攰，少食凍嘢甜嘢，屋企開抽濕機。']);
+else if(W.rh<=45)items.push(['🍂',`濕度 ${W.rh}%`,'好乾：帶潤唇膏、潤膚露，多飲暖水，可以飲雪梨水。']);
+if(W.wind>=40)items.push(['💨','大風','風大：長遮易反，改著防風外套；小心高處跌落嚟嘅嘢。']);
+if(C){const tl=lvl(C.risk.cats.travel);items.push(['🧭',`出行運：${['順','普通','要小心'][tl]}`,`${tl===0?ENCOURAGE.travel:ADVICE.travel}；今日行${S.xi.map(e=>DIRECTION[e]).join('、')}方向比較順。`]);}
+const uvMode=W.uvMax>=3;
+return{items,umb,uvMode,top:xi?(uvMode?PAL[xi].dark:PAL[xi].main):(uvMode?'#1a2f4a':'#8fb3d1'),topName:xi?(uvMode?UVDEEP[xi]:UVLIGHT[xi]):(uvMode?'深色':'淺色'),
+bottom:xi2?PAL[xi2].dark:'#3a3630',bottomName:xi2?UVDEEP[xi2]:'深色',umbCol:umb==='sun'?'#2a2a2a':(xi?PAL[xi].main:'#33628f'),
+cap:W.uvMax>=6&&W.isDay,capCol:xi?PAL[xi].dark:'#1a2f4a',glasses:W.uvMax>=6&&W.isDay,screen:W.uvMax>=3,
+ban:S?PAL[S.ji[0]].main:null,banName:S?PAL[S.ji[0]].name:''};}
+function wxScene(W){const c=W.code,night=!W.isDay,rain=isRain(c),snow=isSnow(c),cloudy=c>=2;let cls='',inner='';
+if(rain||snow)cls='rainy';else if(c>=3)cls='cloudy';if(night)cls+=' night';
+if(night){inner+='<div class="moon"></div>';for(let i=0;i<14;i++)inner+=`<i class="star" style="left:${Math.random()*90}%;top:${Math.random()*55}%;animation-delay:${Math.random()*2}s"></i>`;}
+else if(c<=2)inner+='<div class="rays"></div><div class="sun"></div>';
+if(cloudy){const n=rain?4:c===2?2:3;for(let i=0;i<n;i++)inner+=`<div class="cloud" style="top:${10+i*14}%;animation-duration:${16+i*6}s;animation-delay:-${i*7}s;transform:scale(${.8+i*.15})"></div>`;}
+if(rain){const n=c>=63&&c!==80?40:24;for(let i=0;i<n;i++)inner+=`<i class="drop" style="left:${Math.random()*100}%;animation-delay:-${Math.random().toFixed(2)}s;animation-duration:${(.5+Math.random()*.4).toFixed(2)}s"></i>`;}
+if(snow)for(let i=0;i<20;i++)inner+=`<i class="flake" style="left:${Math.random()*100}%;animation-delay:-${(Math.random()*4).toFixed(2)}s">❄</i>`;
+if(c>=95)inner+='<div class="flash"></div>';if(c===45||c===48)inner+='<div class="fog"></div>';
+const[dsc,ic]=WXC[c]||['—','🌡️'];return`<div class="wxscene ${cls}">${inner}<div class="desc">${ic} ${dsc}${night?'・夜晚':''}</div><div class="big">${Math.round(W.t)}°</div></div>`;}
+
+/* ===== SVG 圖像 ===== */
+let UID=0;
+function emblem(el,big){const c=ELC[el],id='em'+(++UID);let art='';
+if(el==='木')art=`<rect x="55" y="62" width="10" height="34" rx="3" fill="#8b5a2b"/><g class="sway"><circle cx="60" cy="46" r="22" fill="${c}"/><circle cx="43" cy="60" r="14" fill="${c}" opacity=".85"/><circle cx="77" cy="60" r="14" fill="${c}" opacity=".85"/><circle cx="53" cy="38" r="6" fill="#fff" opacity=".3"/></g><ellipse class="leaf" cx="82" cy="34" rx="4" ry="2" fill="${c}"/><ellipse class="leaf l2" cx="40" cy="40" rx="4" ry="2" fill="${c}"/>`;
+else if(el==='火')art=`<g class="flick"><path d="M60 98C36 98 30 76 40 60c4 10 10 12 10 12-2-16 6-32 20-42-2 14 6 20 12 30 6 10 6 18 2 24C80 92 72 98 60 98z" fill="${c}"/></g><g class="flick d2"><path d="M60 96c-12 0-16-10-11-19 2 5 6 6 6 6-1-9 4-16 9-21 0 8 4 11 6 16 3 7 0 18-10 18z" fill="#ffd36b"/></g><circle class="spark" cx="48" cy="40" r="2" fill="#ffd36b"/><circle class="spark" style="animation-delay:.8s" cx="72" cy="36" r="2" fill="#ffd36b"/>`;
+else if(el==='土')art=`<circle class="rise" cx="82" cy="42" r="11" fill="#ffcf6b"/><polygon points="14,96 48,38 68,70 82,56 106,96" fill="${c}"/><polygon points="48,38 57,54 42,57" fill="#fff" opacity=".4"/><polygon points="82,56 88,66 77,66" fill="#fff" opacity=".35"/><rect x="10" y="94" width="100" height="6" rx="3" fill="#7a5a2e"/>`;
+else if(el==='金')art=`<defs><clipPath id="${id}"><polygon points="60,16 94,48 60,104 26,48"/></clipPath></defs><polygon points="60,16 94,48 60,104 26,48" fill="${c}"/><polygon points="60,16 74,48 60,104 46,48" fill="#fff" opacity=".28"/><line x1="26" y1="48" x2="94" y2="48" stroke="#b8860b" stroke-width="2"/><g clip-path="url(#${id})"><polygon class="shine" points="10,0 26,0 6,120 -10,120" fill="#fff" opacity=".7"/></g>`;
+else art=`<defs><clipPath id="${id}"><circle cx="60" cy="62" r="38"/></clipPath></defs><circle cx="60" cy="62" r="38" fill="rgba(85,185,255,.15)"/><g clip-path="url(#${id})"><path class="wave" d="M-40 62 Q-20 52 0 62 T40 62 T80 62 T120 62 T160 62 V120 H-40Z" fill="${c}"/><path class="wave w2" d="M-40 74 Q-20 66 0 74 T40 74 T80 74 T120 74 T160 74 V120 H-40Z" fill="#2b6cb0" opacity=".85"/></g><path class="bob" d="M60 14C53 25 50 31 50 35a10 10 0 0 0 20 0c0-4-3-10-10-21z" fill="${c}"/>`;
+return`<svg viewBox="0 0 120 120" class="emb${big?' big':''}"><defs><radialGradient id="g${id}"><stop offset="0" stop-color="${c}" stop-opacity=".35"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient></defs>
+<circle cx="60" cy="60" r="58" fill="url(#g${id})"/><circle class="spin" cx="60" cy="60" r="56" fill="none" stroke="${c}" stroke-width="1.6" stroke-dasharray="3 7"/><circle class="spinr" cx="60" cy="60" r="51" fill="none" stroke="${GOLD}" stroke-width="1.2" stroke-dasharray="18 8" opacity=".7"/>${art}</svg>`;}
+const TAIJI_BIG=`<svg viewBox="0 0 100 100" style="width:9rem;height:9rem;filter:drop-shadow(0 0 22px #f6c86a)" class="taiji"><circle cx="50" cy="50" r="48" fill="#fff6dc"/><path d="M50 2A48 48 0 0 1 50 98A24 24 0 0 1 50 50A24 24 0 0 0 50 2Z" fill="#1a1433"/><circle cx="50" cy="26" r="7" fill="#1a1433"/><circle cx="50" cy="74" r="7" fill="#fff6dc"/></svg>`;
+function wheel(segs,nowIdx,c1,c2){const cx=120,cy=120,R=98,r=54;let s='';
+const P=(rad,deg)=>{const a=deg*Math.PI/180;return[(cx+rad*Math.cos(a)).toFixed(1),(cy+rad*Math.sin(a)).toFixed(1)];};
+segs.forEach((g,i)=>{const a0=i*30-105,a1=i*30-75,am=i*30-90;
+s+=`<path d="M${P(R,a0)} A${R},${R} 0 0 1 ${P(R,a1)} L${P(r,a1)} A${r},${r} 0 0 0 ${P(r,a0)}Z" fill="${g.col}" fill-opacity="${i===nowIdx?.88:.3}" stroke="#0c0920" stroke-width="2.5"${i===nowIdx?' class="segnow"':''}/>`;
+const[tx,ty]=P(84,am),[sx,sy]=P(65,am);
+s+=`<text x="${tx}" y="${+ty+5}" text-anchor="middle" font-size="15" font-weight="900" fill="#fff">${g.lab}</text><text x="${sx}" y="${+sy+3}" text-anchor="middle" font-size="8" fill="#efe8ff">${g.sub}</text>`;});
+s+=`<circle cx="120" cy="120" r="50" fill="#140f33" stroke="${GOLD}" stroke-opacity=".5" stroke-width="2"/><text x="120" y="116" text-anchor="middle" font-size="17" font-weight="900" fill="${GOLD}">${c1}</text><text x="120" y="136" text-anchor="middle" font-size="10.5" fill="#d8cff5">${c2}</text>`;
+s+=`<g class="needle" data-rot="${nowIdx*30}"><polygon points="120,24 112,6 128,6" fill="${GOLD}" stroke="#fff" stroke-width="1"/></g>`;
+return`<svg viewBox="0 0 240 240" class="wheel">${s}</svg>`;}
+function radar(dist,fd){const E=['木','火','土','金','水'],cx=120,cy=115,R=80;
+const pt=(k,f)=>{const a=(-90+k*72)*Math.PI/180;return[(cx+R*f*Math.cos(a)).toFixed(1),(cy+R*f*Math.sin(a)).toFixed(1)];};let s='';
+[.25,.5,.75,1].forEach(f=>{s+=`<polygon points="${E.map((e,k)=>pt(k,f).join(',')).join(' ')}" fill="none" stroke="#fff" stroke-opacity=".13"/>`;});
+E.forEach((e,k)=>{const[x,y]=pt(k,1);s+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#fff" stroke-opacity=".13"/>`;const[lx,ly]=pt(k,1.22);s+=`<text x="${lx}" y="${+ly+5}" text-anchor="middle" font-size="13" font-weight="900" fill="${ELC[e]}">${ELI[e]}${e}${dist[e]}%</text>`;});
+const f=v=>Math.max(.06,Math.min(1,v/40));
+s+=`<polygon class="grow" points="${E.map((e,k)=>pt(k,f(dist[e])).join(',')).join(' ')}" fill="${GOLD}" fill-opacity=".35" stroke="${GOLD}" stroke-width="2.5"/>`;
+s+=`<polygon class="grow g2" points="${E.map((e,k)=>pt(k,f(fd[e])).join(',')).join(' ')}" fill="#55b9ff" fill-opacity=".12" stroke="#55b9ff" stroke-width="2" stroke-dasharray="5 4"/>`;
+E.forEach((e,k)=>{const[x,y]=pt(k,f(dist[e]));s+=`<circle class="grow" cx="${x}" cy="${y}" r="4.5" fill="${ELC[e]}"/>`;});
+return`<svg viewBox="0 0 240 235" class="radar">${s}</svg>`;}
+function cycleSVG(S,G){const de=S.dEl,order=['木','火','土','金','水'],pos={};
+order.forEach((e,k)=>{const a=(-90+k*72)*Math.PI/180;pos[e]=[150+102*Math.cos(a),145+102*Math.sin(a)];});
+const gi=e=>[de,GEN[de],KE[de],KEBY[de],GENBY[de]].indexOf(e);let s='';
+order.forEach((e,k)=>{const t=order[(k+2)%5],a=pos[e],b=pos[t];s+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#ff5577" stroke-opacity=".4" stroke-width="1.5" stroke-dasharray="3 5"/>`;});
+order.forEach((e,k)=>{const t=order[(k+1)%5],a=pos[e],b=pos[t];s+=`<line class="flowline" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#43e08a" stroke-opacity=".75" stroke-width="3" stroke-dasharray="8 8"/>`;});
+order.forEach((e,k)=>{const[x,y]=pos[e],i=gi(e),pct=G[TG10[i*2]].pct+G[TG10[i*2+1]].pct,rad=22+Math.min(16,pct*.45),me=e===de;
+s+=`<g class="nodeIn" style="animation-delay:${k*.12}s">${me?`<circle class="ringp" cx="${x}" cy="${y}" r="${rad+7}" fill="none" stroke="${GOLD}" stroke-width="2.5"/>`:''}
+<circle cx="${x}" cy="${y}" r="${rad}" fill="${ELC[e]}" fill-opacity=".22" stroke="${ELC[e]}" stroke-width="2.5"/>
+<text x="${x}" y="${y-3}" text-anchor="middle" font-size="19" font-weight="900" fill="${ELC[e]}">${e}</text>
+<text x="${x}" y="${y+13}" text-anchor="middle" font-size="10" fill="#fff">${me?'你・':''}${GRPN[i][0]}</text>
+<text x="${x}" y="${y+rad+(y>150?16:-rad*2-6)}" text-anchor="middle" font-size="10" fill="#d8cff5">${GRPN[i][1]} ${pct}%</text></g>`;});
+return`<svg viewBox="0 0 300 290" class="cyc">${s}</svg>`;}
+const GEAR={
+shirt:c=>`<svg viewBox="0 0 64 64"><path d="M22 8L12 12L3 24L12 31L16 27V58H48V27L52 31L61 24L52 12L42 8Q32 18 22 8Z" fill="${c}" stroke="#000a" stroke-width="2"/></svg>`,
+pants:c=>`<svg viewBox="0 0 64 64"><path d="M16 6H48L52 58H36L32 26L28 58H12Z" fill="${c}" stroke="#000a" stroke-width="2"/></svg>`,
+umb:c=>`<svg viewBox="0 0 64 64"><path d="M4 32Q32 0 60 32Q53 26 46 32Q39 26 32 32Q25 26 18 32Q11 26 4 32Z" fill="${c}" stroke="#000a" stroke-width="2"/><path d="M32 32V54Q32 60 26 58" fill="none" stroke="#ddd" stroke-width="3" stroke-linecap="round"/></svg>`,
+cap:c=>`<svg viewBox="0 0 64 64"><path d="M12 40Q12 14 34 14Q54 14 54 40Z" fill="${c}" stroke="#000a" stroke-width="2"/><path d="M8 40H62Q60 48 40 46H8Z" fill="${c}" stroke="#000a" stroke-width="2"/></svg>`,
+glass:()=>`<svg viewBox="0 0 64 64"><circle cx="19" cy="34" r="11" fill="#111" stroke="#ddd" stroke-width="2"/><circle cx="45" cy="34" r="11" fill="#111" stroke="#ddd" stroke-width="2"/><path d="M30 33Q32 29 34 33" fill="none" stroke="#ddd" stroke-width="2"/><path d="M8 32L2 27M56 32L62 27" stroke="#ddd" stroke-width="2"/><path d="M13 30L18 27" stroke="#fff" stroke-width="2" opacity=".6"/></svg>`,
+screen:()=>`<svg viewBox="0 0 64 64"><rect x="22" y="18" width="20" height="40" rx="6" fill="#ffd95e" stroke="#000a" stroke-width="2"/><rect x="27" y="8" width="10" height="10" rx="2" fill="#ff6b5b"/><text x="32" y="43" text-anchor="middle" font-size="9" font-weight="900" fill="#333">SPF</text></svg>`};
+
+/* ===== UI 小工具 ===== */
+const animOn=()=>!document.body.classList.contains('noanim');
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2500);}
+function confetti(){if(!animOn())return;const em=['✨','⭐','🎉','💎','🌟','🪙'];for(let i=0;i<42;i++){const s=document.createElement('i');s.className='cf';s.textContent=em[i%em.length];s.style.left=Math.random()*100+'vw';s.style.animationDelay=(Math.random()*.7)+'s';s.style.fontSize=(14+Math.random()*18)+'px';document.body.appendChild(s);setTimeout(()=>s.remove(),3500);}}
+function openModal(h){$('mbox').innerHTML=h+'<div style="text-align:center;margin-top:.8rem"><button class="btn" onclick="closeModal()">返回</button></div>';$('modal').classList.add('on');afterRender($('mbox'));}
+function closeModal(){$('modal').classList.remove('on');}
+function afterRender(scope){const sc=scope||document;
+const bars=sc.querySelectorAll('[data-w]');bars.forEach(el=>el.style.width='0');
+const rots=sc.querySelectorAll('[data-rot]');rots.forEach(el=>el.style.transform='rotate(0deg)');
+requestAnimationFrame(()=>requestAnimationFrame(()=>{bars.forEach(el=>el.style.width=el.dataset.w+'%');rots.forEach(el=>el.style.transform=`rotate(${el.dataset.rot}deg)`);}));}
+function floatXP(el,txt){if(!animOn())return;const r=el.getBoundingClientRect(),s=document.createElement('span');s.className='floatxp';s.textContent=txt;s.style.left=(r.left+20)+'px';s.style.top=(r.top-6)+'px';document.body.appendChild(s);setTimeout(()=>s.remove(),1200);}
+let twTimer=null,lastNpc='',npcFull='';
+function typeWrite(el,text){clearInterval(twTimer);npcFull=text;if(!animOn()||text===lastNpc){el.textContent=text;lastNpc=text;return;}
+lastNpc=text;let i=0;el.textContent='';twTimer=setInterval(()=>{i++;el.textContent=text.slice(0,i);if(i>=text.length)clearInterval(twTimer);},30);}
+function skipType(){clearInterval(twTimer);const el=$('npcText');if(el)el.textContent=npcFull;}
+let CURTAB='home';
+function showTab(t){CURTAB=t;S_set('bazi_tab',t);document.querySelectorAll('.page').forEach(p=>p.classList.toggle('on',p.id==='pg-'+t));
+document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));window.scrollTo({top:0,behavior:'smooth'});animPage(t);afterRender($('pg-'+t));
+if(t==='home'){lastNpc='';const nt=$('npcText');if(nt&&CTX)typeWrite(nt,npcMsg(CTX));}}
+function animPage(t){if(!animOn())return;document.querySelectorAll('#pg-'+t+' .panel').forEach((p,i)=>{p.classList.remove('enter');void p.offsetWidth;p.style.animationDelay=(i*80)+'ms';p.classList.add('enter');});}
+const lockPanel=t=>`<div class="panel hero"><div style="font-size:3.2rem" class="bob">🔒</div><div class="ptitle" style="justify-content:center">${t}</div><p>先建立你嘅角色（填出生日期），呢頁就會解鎖。</p><button class="btn big" onclick="goSetup()">⚔️ 建立角色</button></div>`;
+
+/* ===== 任務 ===== */
+function qKey(){const n=new Date();return'bazi_q_'+n.getFullYear()+'-'+(n.getMonth()+1)+'-'+n.getDate();}
+function buildQuests(C){const q=[],S=C.S,W=WX;
+q.push({id:'color',ic:'👕',t:`著${PAL[S.xi[0]].name}出門（幸運色加運）`});
+CATS.filter(c=>lvl(C.risk.cats[c[0]])===0).slice(0,2).forEach(c=>q.push({id:'enc_'+c[0],ic:'⭐',t:ENCOURAGE[c[0]].split('：')[1]||ENCOURAGE[c[0]]}));
+if(C.wl>0)q.push({id:'avoid',ic:'🛡️',t:ADVICE[C.worst[0][0]].split('，')[0]});
+if(C.reds.length)q.push({id:'hour',ic:'⏳',t:`紅色時辰（${C.reds.map(x=>ZHI[x.z]+'時 '+HR[x.z]).join('、')}）唔做大決定`});
+if(W){if(isRain(W.code)||W.pop12>=30)q.push({id:'umb',ic:'☂️',t:'出門帶遮'});
+if(W.uvMax>=3)q.push({id:'sun',ic:'🧴',t:`塗防曬（UV ${W.uvMax}）${W.uvMax>=6?'＋戴帽／太陽眼鏡':''}`});
+if(W.t>=28)q.push({id:'water',ic:'🥤',t:'飲夠 2 公升水'});if(W.app<=12)q.push({id:'warm',ic:'🧣',t:'著夠衫，護住頸同腳'});}
+q.push({id:'sleep',ic:'🌙',t:'11點前上床瞓覺'});return q;}
+function toggleQ(id,el,total){const st=JSON.parse(S_get(qKey())||'{}'),on=el.checked;st[id]=on?1:0;S_set(qKey(),JSON.stringify(st));
+let xp=+(S_get('bazi_xp')||0);xp=Math.max(0,xp+(on?10:-10));S_set('bazi_xp',xp);
+el.closest('.quest').classList.toggle('done',on);document.querySelectorAll('.xpTotal').forEach(x=>x.textContent=xp);
+const done=document.querySelectorAll('.quest input:checked').length,qb=$('qbar');if(qb)qb.style.width=(done/total*100)+'%';
+if(on){floatXP(el,'+10 EXP');if(done===total)setTimeout(()=>{confetti();toast('🎉 今日任務全部完成！獲得「自律之星」');},300);}}
+
+/* ===== 體質問卷狀態 ===== */
+let HSEG=S_get('bazi_hseg')||'quiz',QZ={i:0,ans:{}},TZRES=null,TZMODE='';
+try{QZ=JSON.parse(S_get('bazi_tz_qz')||'null')||QZ;TZRES=JSON.parse(S_get('bazi_tz_res')||'null');}catch(e){}
+function QS(){const g=profile?profile.gender:'M',a=[];TZ.forEach((t,ti)=>t.items.forEach((it,ii)=>a.push({ti,ii,t:typeof it[0]==='function'?it[0](g):it[0],rev:it[1]===0})));
+return a.sort((x,y)=>x.ii-y.ii||x.ti-y.ti);}
+function tzScore(ans){const out={};TZ.forEach((t,ti)=>{let raw=0;const n=t.items.length;t.items.forEach((it,ii)=>{let v=ans[ti+'_'+ii]||1;if(ti===0&&it[1]===0)v=6-v;raw+=v;});out[t.k]=Math.round((raw-n)/(n*4)*100);});return out;}
+function tzJudge(sc){const oth=TZ.slice(1).map(t=>sc[t.k]);
+const ph=sc['平和']>=60&&oth.every(v=>v<30)?'是':sc['平和']>=60&&oth.every(v=>v<40)?'基本是':'否';
+return{ph,res:TZ.slice(1).map(t=>({k:t.k,v:sc[t.k],j:sc[t.k]>=40?'是':sc[t.k]>=30?'傾向是':'否'})).sort((a,b)=>b.v-a.v)};}
+function setHSeg(s){HSEG=s;S_set('bazi_hseg',s);renderHealth();afterRender($('pg-health'));animPage('health');}
+function ansQ(v){const qs=QS(),q=qs[QZ.i];QZ.ans[q.ti+'_'+q.ii]=v;QZ.i++;S_set('bazi_tz_qz',JSON.stringify(QZ));
+if(QZ.i>=qs.length){const sc=tzScore(QZ.ans);const d=new Date();TZRES={sc,date:`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`};S_set('bazi_tz_res',JSON.stringify(TZRES));
+QZ={i:0,ans:QZ.ans};S_set('bazi_tz_qz',JSON.stringify(QZ));TZMODE='';confetti();toast('🩺 體質檢查完成！');renderHealth();if(CTX)renderRole(CTX);afterRender($('pg-health'));window.scrollTo({top:0,behavior:'smooth'});}
+else{renderHealth();}}
+function prevQ(){if(QZ.i>0)QZ.i--;renderHealth();}
+function startQuiz(){QZ={i:0,ans:{}};S_set('bazi_tz_qz',JSON.stringify(QZ));TZMODE='quiz';renderHealth();}
+
+/* ===== 計算總表 ===== */
+function computeCtx(){const[Y,M,D]=profile.bd.split('-').map(Number);let y=Y,m=M,d=D,h=12,mi=0,hasHour=false,solNote='';
+if(profile.bt){const[hh,mm]=profile.bt.split(':').map(Number);h=hh;mi=mm;hasHour=true;
+if(profile.lon!==''&&profile.lon!=null&&!isNaN(parseFloat(profile.lon))){const off=Math.round(parseFloat(profile.lon)*4-profile.tz*60);
+const nd=new Date(Date.UTC(Y,M-1,D,h,mi)+off*6e4);y=nd.getUTCFullYear();m=nd.getUTCMonth()+1;d=nd.getUTCDate();h=nd.getUTCHours();mi=nd.getUTCMinutes();
+solNote=`真太陽時修正 ${off>=0?'+':''}${off} 分鐘 → ${y}-${m}-${d} ${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}`;}}
+else if(profile.bh>=0){h=profile.bh;mi=30;hasHour=true;}
+const pl=calcPillars(y,m,d,h,mi,hasHour,profile.rule),S=calcStrength(pl,hasHour),dist=calcElemDist(pl,hasHour),sh=calcShensha(pl,hasHour),combos=natalCombos(pl,hasHour);
+const dy=calcDayun(pl,y,m,d,h,mi,hasHour,profile.gender,profile.rule),age=(Date.now()-Date.UTC(Y,M-1,D))/(365.2425*864e5);
+let cur=-1;if(dy.list.length&&age>=dy.list[0].age)cur=Math.min(dy.list.length-1,Math.floor((age-dy.list[0].age)/10));
+const now=new Date(),fl=calcPillars(now.getFullYear(),now.getMonth()+1,now.getDate(),now.getHours(),now.getMinutes(),true,profile.rule);
+const natalBs=[{z:pl.yz,pos:'年支'},{z:pl.mz,pos:'月支'},{z:pl.dz,pos:'日支'}];if(hasHour)natalBs.push({z:pl.hz,pos:'時支'});
+const flows=[];if(cur>=0)flows.push({z:dy.list[cur].z,g:dy.list[cur].g,layer:'大運',w:0.5});
+flows.push({z:fl.yz,g:fl.yg,layer:'本年',w:0.9},{z:fl.mz,g:fl.mg,layer:'本月',w:1.0},{z:fl.dz,g:fl.dg,layer:'本日',w:1.8},{z:fl.hz,g:fl.hg,layer:'本時',w:0.6});
+markTriggers(combos,flows.filter(f=>f.layer!=='本時'));
+const horseSet=new Set([HORSE(pl.yz),HORSE(pl.dz)]),peachSet=new Set([PEACH(pl.yz),PEACH(pl.dz)]);
+const risk=flowRisk(natalBs,flows,S,horseSet,peachSet);applyWxRisk(risk);
+const week=sevenDay(natalBs,S),hw=hourWatch(natalBs,fl.dz),titles=genTitles(S,dist,sh,combos,pl),fd=flowElems(fl),G=godStats(pl,hasHour);
+const flowGods=flows.map(f=>({layer:f.layer,g:f.g,god:tenGod(pl.dg,f.g)}));
+const worst=CATS.map(c=>[c,risk.cats[c[0]]]).sort((a,b)=>b[1]-a[1])[0],wl=lvl(worst[1]);
+const hp=Math.max(5,Math.min(100,Math.round(100-worst[1]*14/fSens()))),mp=Math.max(5,Math.min(100,Math.round(S.xi.reduce((a,e)=>a+fd[e],0)*1.3))),exp=Math.round((age%1)*100);
+const reds=hw.filter(x=>hwLvl(x.sc)===2),yels=hw.filter(x=>hwLvl(x.sc)===1),hzNow=hourToZ(now.getHours());
+return{pl,S,dist,fd,sh,combos,dy,cur,fl,now,natalBs,flows,risk,week,hw,hasHour,age,solNote,titles,G,flowGods,worst,wl,hp,mp,exp,reds,yels,hzNow};}
+const FORT=[[85,'大吉','🌈','今日運氣好好！放膽做想做嘅事。'],[65,'吉','☀️','整體順利，小心少少就得。'],[45,'平','⛅','平平穩穩，一步步嚟。'],[30,'小心','🌧️','有啲碰撞，做事慢少少、諗多一步。'],[0,'穩守','⛈️','挑戰多，大事改日先做，照顧好自己。']];
+function npcMsg(C){const hh=C.now.getHours(),greet=hh<5?'夜深喇':hh<11?'早晨':hh<14?'午安':hh<18?'下晝好':'夜晚好',f=FORT.find(x=>C.hp>=x[0]);
+let t=`${greet}，${C.titles.main}！今日係${GAN[C.fl.dg]}${ZHI[C.fl.dz]}日，運勢「${f[1]}」。${['同你命盤冇乜碰撞，放膽出擊！','有少少碰撞，小心行事就得。','挑戰比較多，穩陣為上。'][C.wl]}${C.wl>0?`最要留意：${C.worst[0][2]}。`:''}`;
+if(WX){const[dsc]=WXC[WX.code]||['天氣'];const[ul]=uvLv(WX.uvMax);
+t+=`外面${LOC?LOC.name.replace(/（.*?）/,''):''}${Math.round(WX.t)}度、濕度${WX.rh}%、${dsc}，紫外線最高${WX.uvMax}（${ul}）。`;
+t+=isRain(WX.code)||WX.pop12>=60?'記得帶遮！':WX.pop12>=30?'袋定把縮骨遮。':WX.uvMax>=6?'太陽好猛，帶太陽遮、塗防曬。':'';
+t+=`今日著${WX.uvMax>=3?UVDEEP[C.S.xi[0]]:UVLIGHT[C.S.xi[0]]}最旺你。`;}else t+=`今日著${PAL[C.S.xi[0]].name}最旺你。`;return t;}
+function flipFort(el){el.classList.add('flip');S_set('bazi_fort_'+qKey(),'1');if(animOn())setTimeout(confetti,500);}
+
+/* ===== HUD ===== */
+function renderHUD(C){const h=$('hud');if(!C){h.innerHTML='';return;}const hc=C.hp>=65?'var(--good)':C.hp>=35?'var(--warn)':'var(--bad)';
+h.innerHTML=`<span class="lv">Lv.${Math.floor(C.age)}</span><span class="hb"><span style="color:${hc}">HP</span><span class="bar"><i data-w="${C.hp}" style="background:${hc}"></i></span></span>
+<span class="hb"><span style="color:var(--water)">MP</span><span class="bar"><i data-w="${C.mp}" style="background:var(--water)"></i></span></span><span>🪙<span class="xpTotal">${S_get('bazi_xp')||0}</span></span>`;}
+
+/* ===== 主城 ===== */
+function renderHome(C){const box=$('homeBody');
+if(!C){box.innerHTML=`<div class="panel hero">${TAIJI_BIG}<div class="ptitle" style="justify-content:center;font-size:1.3rem">歡迎嚟到五行世界，冒險者！</div>
+<p>每個人出世嗰一刻，都帶住一套獨一無二嘅「五行能量」（木、火、土、金、水）。<br>輸入出生日期，就會生成你嘅<b>專屬角色</b>：</p>
+<div class="row" style="justify-content:center;font-size:.9rem;margin-bottom:.8rem"><span class="chip">🌈 每日運勢</span><span class="chip">👕 出門著咩色</span><span class="chip">☂️ 天氣提醒</span><span class="chip">🎴 十神角色卡</span><span class="chip">🩺 中醫體質檢查</span></div>
+<button class="btn big" onclick="goSetup()">⚔️ 建立我嘅角色</button></div>`;return;}
+const{S,pl,risk,hw,titles,week,fl,dy,cur,wl,worst,reds,yels,hzNow}=C,f=FORT.find(x=>C.hp>=x[0]),flipped=S_get('bazi_fort_'+qKey())==='1';
+const quests=buildQuests(C),qs=JSON.parse(S_get(qKey())||'{}'),qdone=quests.filter(q=>qs[q.id]).length;
+let topLine=reds.length?`今日 ${reds.map(x=>`<b>${ZHI[x.z]}時（${HR[x.z]}）</b>`).join('、')} 要特別小心。`:yels.length?`今日冇紅色時辰；${yels.slice(0,3).map(x=>`${ZHI[x.z]}時（${HR[x.z]}）`).join('、')} 留意下就得。`:'今日十二個時辰都順暢，放心安排！';
+let h=`<div class="panel"><div class="npc"><div class="npcav">🧙</div><div class="npcbox"><div class="npcname">軍師・玄機子</div><div id="npcText" class="npctext" onclick="skipType()" title="撳一下顯示全文"></div></div></div></div>`;
+h+=`<div class="panel"><div class="ptitle">🌈 今日運勢</div><div class="hint">撳張卡抽今日運籤。運勢係睇今日嘅能量同你命盤有冇「相撞」計出嚟。</div>
+<div class="row" style="justify-content:center">
+<div class="fortune${flipped?' flip':''}" onclick="flipFort(this)"><div class="fin"><div class="ff"><b>☯</b><div style="margin-top:.5rem;font-weight:900;color:var(--gold)">撳我抽籤</div></div>
+<div class="fb"><div style="font-size:2.4rem">${f[2]}</div><div class="fl">${f[1]}</div><small>${f[3]}</small></div></div></div>
+<div style="flex:1;min-width:13rem;text-align:center">${emblem(S.dEl)}
+<div><b style="font-size:1.1rem">你係「<span class="wx${S.dEl}">${S.dEl}</span>」屬性嘅${titles.cls}</b></div>
+<small class="sub">${S.strong?'能量充足型：自己夠力，適合主動出擊':'需要補給型：要有人幫手、休息夠先發力'}</small>
+<div style="margin-top:.3rem">幸運五行：${S.xi.map(e=>`<span class="chip wx${e}">${ELI[e]}${e}</span>`).join('')}<br>要避：${S.ji.slice(0,2).map(e=>`<span class="chip wx${e}">${e}</span>`).join('')}</div></div></div>
+<p style="margin:.6rem 0 0">${wl===0?`<span class="enc">🌟 今日可以進取！${ENCOURAGE[CATS.map(c=>[c[0],risk.cats[c[0]]]).sort((a,b)=>a[1]-b[1])[0][0]]}。</span>`:`⚠️ 今日最要留意「${worst[0][2]}」：${ADVICE[worst[0][0]]}。`}</p></div>`;
+h+=`<div class="panel"><div class="ptitle">📜 今日任務 <span class="chip on" style="margin-left:auto">🪙 冒險積分 <b class="xpTotal">${S_get('bazi_xp')||0}</b></span></div>
+<div class="hint">按今日運勢同天氣生成。完成一項就剔，每項 +10 分，全部完成有獎勵動畫！</div>
+<div class="bar" style="margin-bottom:.5rem"><i id="qbar" data-w="${qdone/quests.length*100}" style="background:linear-gradient(90deg,var(--good),var(--gold))"></i></div>
+${quests.map(q=>`<label class="quest${qs[q.id]?' done':''}"><input type="checkbox"${qs[q.id]?' checked':''} onchange="toggleQ('${q.id}',this,${quests.length})"><span>${q.ic}</span><span class="qt">${q.t}</span><span class="qx">+10</span></label>`).join('')}</div>`;
+h+=`<div class="panel"><div class="ptitle">🛡️ 今日六大防護盾</div><div class="hint">綠＝順，可以進取；黃＝小心少少；紅＝挑戰多。條 bar 越長代表越要留意。</div>
+${reds.length||wl===2?`<div class="alert">📌 ${topLine}</div>`:`<div class="okline">📌 ${topLine}</div>`}
+<div class="shields">${CATS.map(c=>{const v=risk.cats[c[0]],L=lvl(v),bw=Math.min(100,Math.round(v/(5*fSens())*100));
+return`<div class="shield L${L}"><div class="sh"><span class="shi">${c[1]}</span>${c[2]}<span class="chip lv${L}" style="margin-left:auto">${['順','留意','小心'][L]}</span></div>
+<div class="bar" style="margin:.35rem 0;height:.5rem"><i data-w="${Math.max(4,bw)}" style="background:${LVC[L]}"></i></div>
+<p>${L===0?`<span class="enc">🌟 ${ENCOURAGE[c[0]]}。</span>`:ADVICE[c[0]]+'。'}</p>
+${risk.why[c[0]].length?`<details><summary>點解？</summary>${[...new Set(risk.why[c[0]])].slice(0,5).map(w=>`<div style="font-size:.8rem">・${w}</div>`).join('')}</details>`:''}</div>`;}).join('')}</div>
+<div style="margin-top:.6rem;text-align:right"><label>提醒程度 </label><select onchange="setSens(this.value)"><option value="con"${sens==='con'?' selected':''}>多啲提醒</option><option value="std"${sens==='std'?' selected':''}>標準</option><option value="loose"${sens==='loose'?' selected':''}>大事先提</option></select></div></div>`;
+const hl=hwLvl(hw[hzNow].sc);
+h+=`<div class="panel"><div class="ptitle">⏰ 今日時辰轉盤</div><div class="hint">一日分 12 個時辰（每個 2 個鐘）。金色箭咀指住而家。紅色嗰兩個鐘出門、簽嘢、做決定小心啲就得。</div>
+${wheel(hw.map(x=>({lab:ZHI[x.z],sub:HR[x.z],col:LVC[hwLvl(x.sc)]})),hzNow,ZHI[hzNow]+'時',['而家順','而家留意','而家小心'][hl])}
+<div style="margin-top:.5rem;font-size:.85rem">${hw.filter(x=>x.sc>0).map(x=>`<span class="chip lv${hwLvl(x.sc)}">${ZHI[x.z]}時 ${HR[x.z]}：${x.rs.join('、')}</span>`).join('')||'<span class="enc">全日冇碰撞時辰 🎉</span>'}</div></div>`;
+h+=`<div class="panel"><div class="ptitle">📅 未來七日</div><div class="hint">綠色嗰日最啱做大事、約人；紅黃色嗰日大事盡量避開。</div>
+<div class="strip">${week.map((w,i)=>{const L=w.sc===0?0:w.sc<4*fSens()?1:2;return`<div class="dcard${i===0?' now':''}" style="animation-delay:${i*.07}s"><div>${i===0?'今日':w.m+'/'+w.d}</div><small class="sub">星期${w.dow}</small><div style="font-size:1.1rem;font-weight:900">${gsp(w.di%10)}${zsp(w.di%12)}</div><span class="dot d${L}"></span><div><small class="sub">${w.ns.join(' ')||'順'}</small></div></div>`;}).join('')}</div></div>`;
+h+=`<div class="panel"><div class="ptitle">🗺️ 今月・今年主題</div><div class="hint">大方向：今個月同今年帶嚟咩能量，同你夾唔夾。</div>
+<div class="box">${flowTheme(fl.mg,fl.mz,C.natalBs,S,'今個月')}</div><div class="box">${flowTheme(fl.yg,fl.yz,C.natalBs,S,'今年')}</div>
+${cur>=0?`<div class="box">${flowTheme(dy.list[cur].g,dy.list[cur].z,C.natalBs,S,'呢十年大運')}</div>`:''}</div>`;
+box.innerHTML=h;}
+
+/* ===== 出門（天氣） ===== */
+function renderWeather(C){const box=$('wxBody');if(!box)return;
+const loc=`<div class="wxloc">📍 <b>${LOC?esc(LOC.name):'未定位'}</b><button class="btn2 mini" onclick="locate(true)">重新定位</button>
+<input id="wxq" placeholder="輸入城市（中／英）" style="width:9.5rem" onkeydown="if(event.key==='Enter')searchCity()"><button class="btn2 mini" onclick="searchCity()">搜尋</button></div>`;
+if(!WX){box.innerHTML=`<div class="panel"><div class="ptitle">🌦️ 當地天氣</div>${loc}<p class="sub">${WXERR||'天氣載入中…（第一次用會問你拎定位權限）'}</p></div>`;return;}
+const W=WX,[ul,uc]=uvLv(W.uvMax),adv=outingAdvice(W,C),wel=weatherElems(W);
+const strip=W.hrs.map(x=>{const L=C?hwLvl(C.hw[hourToZ(x.h)].sc):null;const[,i2]=WXC[x.code]||['','🌡️'];
+return`<div class="hr"><div>${String(x.h).padStart(2,'0')}:00</div><div class="ic">${i2}</div><b>${Math.round(x.t)}°</b><br><small class="sub">☔${x.pop}%</small><br><small class="sub">UV${Math.round(x.uv)}</small>${L!==null?`<div><span class="dot d${L}"></span> <small class="sub">${ZHI[hourToZ(x.h)]}</small></div>`:''}</div>`;}).join('');
+const gears=[['上衣',GEAR.shirt(adv.top),adv.topName,1],['下身',GEAR.pants(adv.bottom),adv.bottomName,1],
+['遮',GEAR.umb(adv.umbCol),adv.umb==='rain'?'雨遮':adv.umb==='sun'?'太陽遮':'今日唔使',!!adv.umb],
+['帽',GEAR.cap(adv.capCol),adv.cap?'闊邊帽':'今日唔使',adv.cap],['太陽眼鏡',GEAR.glass(),adv.glasses?'UV400':'今日唔使',adv.glasses],['防曬',GEAR.screen(),adv.screen?'SPF30+':'今日唔使',adv.screen]];
+let xjLine='';if(C){const g=wel.filter(([e])=>C.S.xi.includes(e)).length,b=wel.filter(([e])=>C.S.ji.includes(e)).length;
+xjLine=g>b?'<br>🌟 今日天氣嘅五行幫到你，出門辦事順手啲！':b>g?'<br>⚠️ 今日天氣嘅五行同你唔太夾，量力而為，著返幸運色平衡下。':'';}
+const t=new Date(W.fetched);
+box.innerHTML=`<div class="panel"><div class="ptitle">🌦️ 當地天氣</div>${loc}
+<div class="wxtop">${wxScene(W)}<div class="wxstats">
+<div class="wst"><span>🌡️ 氣溫</span><b>${Math.round(W.t)}°C</b><small>體感 ${Math.round(W.app)}°｜${Math.round(W.tmin)}–${Math.round(W.tmax)}°</small></div>
+<div class="wst" style="animation-delay:.05s"><span>💧 濕度</span><b>${W.rh}%</b><small>${W.rh>=85?'好潮濕':W.rh>=70?'有啲潮':W.rh<=40?'乾燥':'舒服'}</small></div>
+<div class="wst" style="animation-delay:.1s"><span>🔆 紫外線</span><b style="color:${uc}">${W.uvMax}</b><small>今日最高（${ul}）｜而家 ${W.uv}</small></div>
+<div class="wst" style="animation-delay:.15s"><span>☔ 落雨機會</span><b>${W.pop12}%</b><small>未來12個鐘最高</small></div>
+<div class="wst" style="animation-delay:.2s"><span>💨 風速</span><b>${Math.round(W.wind)}</b><small>km/h</small></div>
+<div class="wst" style="animation-delay:.25s"><span>🌅 日出／日落</span><b style="font-size:1rem">${W.sunrise}／${W.sunset}</b></div></div></div>
+<div class="uvmeter"><i style="left:${Math.min(100,W.uvMax/12*100)}%"></i></div>
+<small class="sub">紫外線：0–2低・3–5中・6–7高・8–10甚高・11+極高${W.uvWin?`｜今日最猛時段約 <b>${W.uvWin}</b>`:''}</small></div>
+<div class="panel"><div class="ptitle">⏱️ 未來12個鐘</div>${C?'<div class="hint">下面圓點＝嗰個時辰同你命盤夾唔夾（綠順、黃留意、紅小心）。</div>':''}<div class="strip">${strip}</div></div>
+<div class="panel"><div class="ptitle">🎒 今日出門裝備</div><div class="hint">發光嘅格＝今日要帶／要著；灰色＝今日唔使。衫褲顏色已經配合${C?'你嘅幸運五行同':''}紫外線。</div>
+<div class="gears">${gears.map((g,i)=>`<div class="gear ${g[3]?'on':'off'}" style="animation-delay:${i*.07}s">${g[1]}<b>${g[0]}</b>${g[2]}</div>`).join('')}
+${adv.ban?`<div class="gear ban">${GEAR.shirt(adv.ban)}<b>避免</b>成身${adv.banName}</div>`:''}</div>
+${C?`<div style="margin-top:.6rem"><span class="swatch"><i style="background:${PAL[C.S.xi[0]].main}"></i>主色 ${PAL[C.S.xi[0]].name}</span><span class="swatch"><i style="background:${PAL[C.S.xi[1]||C.S.xi[0]].main}"></i>配色 ${PAL[C.S.xi[1]||C.S.xi[0]].name}</span><span class="swatch"><i style="background:${PAL[C.S.xi[0]].dark}"></i>防UV深色版</span></div>`:''}</div>
+<div class="panel"><div class="ptitle">📋 出門建議（天氣 × 命盤）</div>${adv.items.map(it=>`<div class="box">${it[0]} <b>${it[1]}：</b>${it[2]}</div>`).join('')}
+<div class="box">☯️ <b>今日天氣嘅五行：</b>${wel.length?wel.map(([e,tx])=>`<span class="wx${e}"><b>${e}</b></span>（${tx}）${C?(C.S.xi.includes(e)?'<span class="chip lv0">幫你</span>':C.S.ji.includes(e)?'<span class="chip lv2">唔夾</span>':''):''}`).join('；'):'天氣溫和，冇特別偏向。'}${xjLine}</div>
+${C?'':'<p class="sub">建立角色後，衫色會配合你嘅幸運五行。</p>'}
+<small class="sub">天氣數據：Open-Meteo（每30分鐘更新）｜更新於 ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}</small></div>`;}
+
+/* ===== 角色 ===== */
+function renderRole(C){const box=$('roleBody');if(!C){box.innerHTML=lockPanel('角色未建立');return;}
+const{S,pl,dist,fd,titles,dy,cur,wl,worst,combos,sh,hasHour}=C,buffs=wxBuffs(WX,S),hpCol=C.hp>=65?'var(--good)':C.hp>=35?'var(--warn)':'var(--bad)';
+if(TZRES){const j=tzJudge(TZRES.sc),m=j.ph==='是'?'平和':(j.res.find(r=>r.j==='是')||{}).k;if(m)buffs.push(['🩺','體質：'+m+'質',m==='平和'?'good':'warn']);}
+if(wl===2)buffs.unshift(['💢',worst[0][2]+'要小心','bad']);
+let h=`<div class="panel" style="text-align:center"><div class="ptitle" style="justify-content:center">🧙 我的角色</div>
+${emblem(S.dEl,true)}<div><span class="title">「${titles.main}」</span></div><div><span class="title2">${titles.sub2}</span></div>
+<b>${GAN[pl.dg]}${S.dEl}命 · ${titles.cls} · Lv.${Math.floor(C.age)} · ${profile.gender==='M'?'♂':'♀'}</b>
+<div class="buffs" style="justify-content:center">${buffs.map((b,i)=>`<span class="buff ${b[2]}" style="animation-delay:${i*.08}s">${b[0]} ${b[1]}</span>`).join('')}</div>
+<div style="max-width:24rem;margin:.6rem auto 0;text-align:left">
+<div class="statrow"><b style="width:2.4rem;color:${hpCol}">HP</b><div class="bar"><i data-w="${C.hp}" style="background:${hpCol}"></i></div><span style="width:3.6rem;text-align:right">${C.hp}</span></div>
+<div class="statrow"><b style="width:2.4rem;color:var(--water)">MP</b><div class="bar"><i data-w="${C.mp}" style="background:var(--water)"></i></div><span style="width:3.6rem;text-align:right">${C.mp}</span></div>
+<div class="statrow"><b style="width:2.4rem;color:var(--gold)">EXP</b><div class="bar"><i data-w="${C.exp}" style="background:var(--gold)"></i></div><span style="width:3.6rem;text-align:right">${C.exp}%</span></div>
+<small class="sub">HP＝今日狀態（碰撞越多越低）｜MP＝今日有幾多幸運五行能量｜EXP＝距離下個生日（升級）嘅進度</small></div>
+<p style="font-size:.92rem;text-align:left">⚔️ ${titles.line}<br>🔋 ${titles.sub2line}<br>🌱 ${GAN_DESC[pl.dg]}</p>
+${titles.sub.length?`<div>${titles.sub.map(t=>`<span class="tsub">🏅 ${t}</span>`).join('')}</div>`:''}</div>`;
+h+=`<div class="panel"><div class="ptitle">📊 五行能量雷達</div><div class="hint">金色＝你出世帶住嘅五行（一世唔變）；藍色虛線＝今日時間帶嚟嘅五行（會變）。邊個角越大，嗰種能量越強。</div>
+${radar(dist,fd)}</div>`;
+const L1=ELEM_LIFE[S.xi[0]],xe=S.xi[0];
+h+=`<div class="panel"><div class="ptitle">🍀 幸運五行・點樣用</div>
+<div class="hint">「幸運五行」（術語叫喜用神）＝幫到你、令你順啲嘅五行；「要避嘅五行」（忌神）＝太多會令你攰嘅五行。</div>
+<div class="box">🍀 <b>幸運五行：</b>${S.xi.map(e=>`<span class="chip wx${e}">${ELI[e]} ${e}</span>`).join('')}　🚫 <b>要避：</b>${S.ji.slice(0,2).map(e=>`<span class="chip wx${e}">${e}</span>`).join('')}</div>
+<div class="box">🌡️ <b>冷熱平衡（調候）：</b>${tiaohou(pl,dist)}</div>
+<div class="box">🍽️ <b>食：</b><span class="wx${xe}">${L1.diet}</span>${S.ji.includes('火')?'；煎炸辛辣少食':''}${S.ji.includes('水')?'；凍飲少飲':''}。</div>
+<div class="box">🏃 <b>運動：</b>${L1.sport}。${!S.strong?'你屬需要補給型，運動貴乎恆常輕量，唔好操過龍。':''}${WX&&(isRain(WX.code)||WX.app>=33)?'今日天氣唔啱戶外，改做室內運動。':''}</div>
+<div class="box">🧭 <b>方位：</b>${S.xi.map(e=>DIRECTION[e]).join('、')}比較旺你——搵工、搬屋、旅行可以優先考慮；坐位背靠${DIRECTION[xe]}更好。</div>
+<div class="box">💼 <b>適合範疇：</b>${L1.ind}。<small class="sub">（參考啫，興趣同能力最緊要）</small></div></div>`;
+h+=`<div class="panel"><div class="ptitle">🧬 天生特質</div><div class="hint">命盤入面幾粒字之間嘅關係（相撞、相合等），代表你天生嘅性格傾向。發光嘅＝而家正被時間能量「叫醒」。</div>
+${combos.length?combos.map(c=>`<div class="box${c.trig?'':' dim'}"><b>${c.label}</b> <small class="sub">${c.pos}</small>${c.trig?`<span class="trig">⚡ ${c.trig}・${DUR[c.trigLayer]}</span>`:''}<br><small>${COMBO_DESC[c.kind]||''}${c.trig?`——${SPANTXT[c.trigLayer]}呢個特質會特別明顯。`:'（暫時未被叫醒）'}</small></div>`).join(''):'<p class="sub">命盤幾粒字之間冇明顯碰撞，性格單純清爽。</p>'}</div>`;
+const skillHTML=s=>{const ownedC=s.cands.filter(c=>c.poss.length),owned=ownedC.length>0;let trig=null;ownedC.forEach(c=>{if(!trig)trig=ssTrig(c.z,C.flows);});
+const potC=s.cands.filter(c=>!c.poss.length).map(c=>{const f=C.flows.find(f2=>f2.z===c.z);return f?{z:c.z,layer:f.layer}:null;}).filter(Boolean),active=owned||potC.length;
+const chips=s.cands.map(c=>c.poss.length?`<span class="chip on">${ZHI[c.z]}・${c.poss.map(p=>POSP[p]||p).join('、')} ✔</span>`:potC.find(x=>x.z===c.z)?`<span class="chip pot">${ZHI[c.z]}・${potC.find(x=>x.z===c.z).layer}借畀你⚡</span>`:`<span class="chip dim">${ZHI[c.z]}・未有</span>`).join('');
+let tail=owned?`<br>喚醒條件：遇到「${ownedC.map(c=>[ZHI[c.z],ZHI[chongOf(c.z)],ZHI[HE6[c.z]]].join('／')).join('；')}」嘅年月日就會發動。`:'';
+if(potC.length)tail+=`<br>⚡ 你本身冇呢粒字，但${potC.map(p=>`${p.layer}暫時借畀你（到${VALID[p.layer]}）`).join('、')}。`;
+if(!active)tail='<br>你命中未有呢個技能，時間行到嗰粒字時會暫時借畀你。';
+return`<div class="skill${active?'':' dim'}">${owned?'<span class="tag">天生</span>':potC.length?'<span class="tag p">暫借</span>':'<span class="tag" style="opacity:.5">未有</span>'}<b>${s.name}</b>${trig?`<span class="trig">⚡ ${trig.txt}・${DUR[trig.layer]}</span>`:''}<div>${chips}</div><small>${SS_DESC[s.name]||''}${tail}</small></div>`;};
+const deSk=sh.filter(s=>s.name==='天德貴人'||s.name==='月德貴人').map(s=>`<div class="skill"><span class="tag">天生</span><b>${s.name}</b> <small class="sub">（喺${s.pos}）</small><small>${SS_DESC[s.name]}</small></div>`).join('');
+h+=`<div class="panel"><div class="ptitle">✨ 技能欄（神煞）<label style="font-size:.72rem;font-weight:400;margin-left:auto;color:var(--sub)"><input type="checkbox" onchange="toggleAdvSS(this)"${advSS?' checked':''}> 顯示更多技能</label></div>
+<div class="hint">「天生」＝命中本身有，一世都喺度；「暫借」＝而家嘅時間能量暫時借畀你；灰色＝未有。</div>
+${shenshaFull(pl,hasHour).map(skillHTML).join('')}${deSk}${advSS?shenshaFullAdv(pl,hasHour).map(skillHTML).join(''):''}</div>`;
+box.innerHTML=h;}
+
+/* ===== 十神 ===== */
+function renderGods(C){const box=$('godsBody');if(!C){box.innerHTML=lockPanel('十神卡未解鎖');return;}
+const{S,G}=C,de=S.dEl,todayMap={};C.flowGods.forEach(f=>{(todayMap[f.god]=todayMap[f.god]||[]).push(f.layer);});
+let h=`<div class="panel"><div class="ptitle">🎴 十神係乜？</div>
+<div class="hint">以「你」（日主${GAN[C.pl.dg]}・${de}）做中心，命盤入面每一粒字同你嘅關係，可以分成 10 種角色——好似遊戲入面嘅隊友、對手、獎勵、Boss、補師。</div>
+${cycleSVG(S,G)}
+<div style="font-size:.8rem;text-align:center" class="sub"><span style="color:#43e08a">━ 綠色流動線＝相生（幫手）</span>　<span style="color:#ff5577">┅ 紅色虛線＝相剋（制約）</span>　<span style="color:var(--gold)">◎ 金圈＝你</span><br>圓圈越大＝嗰組角色喺你命中越強</div></div>`;
+h+=`<div class="panel"><div class="ptitle">🃏 十神角色卡收藏 <small class="sub" style="font-weight:400">撳卡睇詳情</small></div>
+<div class="hint">稀有度＝佢喺你命中嘅份量：SSR（最強）＞SR＞R＞N；灰色＝你命中冇。⚡＝今日時間能量帶咗佢嚟。</div>
+<div class="gods">${TG10.map((n,i)=>{const st=G[n],r=rarity(st.pct),el=godEl(de,n),I=TG_INFO[n];
+return`<div class="gcard r-${r}" style="animation-delay:${i*.06}s;border-top-color:${r==='SSR'?'':ELC[el]}" onclick="openGod('${n}')">
+<span class="rar">${r==='L'?'未解鎖':r}</span>${todayMap[n]?'<span class="gtoday">⚡今日</span>':''}
+<div class="gic" style="animation-delay:${i*.2}s">${I.ic}</div><div class="gn">${n}</div><div class="gk">${I.nick}</div>
+<div style="font-size:.72rem"><span class="wx${el}">${el}</span>・${S.xi.includes(el)?'<span class="enc">幸運</span>':S.ji.includes(el)?'<span style="color:var(--bad)">要避</span>':'中性'}・${st.pct}%</div>
+<div class="bar"><i data-w="${Math.min(100,st.pct*3)}" style="background:${ELC[el]}"></i></div></div>`;}).join('')}</div></div>`;
+h+=`<div class="panel"><div class="ptitle">⚡ 今日嚟探你嘅十神</div><div class="hint">而家嘅年、月、日、時，各自帶住一個十神角色嚟。日嘅影響最大。</div>
+${C.flowGods.map(f=>{const I=TG_INFO[f.god];return`<div class="box"><span class="tag">${f.layer}</span> ${gsp(f.g)} → <b>${I.ic} ${f.god}（${I.nick}）</b><br><small>${f.layer==='本日'?'👉 今日：':f.layer==='本時'?'👉 呢個時辰：':'👉 '}${I.today}。</small></div>`;}).join('')}</div>`;
+box.innerHTML=h;}
+function openGod(n){const C=CTX;if(!C)return;const st=C.G[n],I=TG_INFO[n],el=godEl(C.S.dEl,n),r=rarity(st.pct),isXi=C.S.xi.includes(el),isJi=C.S.ji.includes(el),p=st.pct;
+const today=C.flowGods.filter(f=>f.god===n).map(f=>f.layer);
+let adv;if(p===0)adv=`你命中冇「${n}」。唔使擔心，只係呢方面唔係你天生主打${isXi?'；而且佢係幫到你嘅能量，遇到佢出現嘅日子（⚡標示）會特別順。':'，可以靠後天學習慢慢補。'}`;
+else if(p>=20)adv=`「${n}」係你命中最強嘅力量之一（${p}%）。${isXi?'而且佢幫到你，係你嘅王牌，放心用！':isJi?'不過太多會過載：小心'+I.more+'。':'好突出，用得其所就好。'}`;
+else if(p>=8)adv=`份量中等（${p}%）。${isXi?'係好幫手，可以多啲用。':isJi?'適量就好，唔好過頭。':'平衡穩定。'}`;
+else adv=`份量少（${p}%）。${isXi?'呢種能量幫到你，可以後天多補（多接觸佢代表嘅人同事）。':'影響唔大。'}`;
+openModal(`<div class="mic">${I.ic}</div><div style="text-align:center"><span class="rar" style="position:static;font-size:.8rem">${r==='L'?'未解鎖':r}</span>
+<div class="title" style="margin:.3rem 0">${n}</div><div class="sub">${I.nick}・屬<span class="wx${el}">${el}</span>・${isXi?'<span class="enc">幸運能量</span>':isJi?'<span style="color:var(--bad)">要避嘅能量</span>':'中性能量'}</div></div>
+<div class="box">👥 <b>佢代表：</b>${I.short}${godPeople(n,profile.gender)}。</div>
+<div class="box">💬 <b>性格表現：</b>${I.plain}</div>
+<div class="box">🎮 <b>遊戲比喻：</b>${I.game}。</div>
+<div class="box">📊 <b>你命中有幾多：</b>${p}%<div class="bar" style="margin:.3rem 0"><i data-w="${Math.min(100,p*3)}" style="background:${ELC[el]}"></i></div>
+${st.pos.length?`<small>出現位置：${st.pos.map(x=>x.replace('年干','年柱天干').replace('月干','月柱天干').replace('時干','時柱天干')).join('、')}<br>${st.tou?'✨ 有「透出天干」＝明顯表現出嚟，人哋一睇就見到。':'🌙 只係「藏喺地支」＝內在潛力，要時機先發揮。'}</small>`:'<small>命中冇出現。</small>'}</div>
+<div class="box">🧭 <b>俾你嘅建議：</b>${adv}</div>
+<div class="box">📈 <b>太多會：</b>${I.more}<br>📉 <b>太少會：</b>${I.less}</div>
+${today.length?`<div class="box" style="border-color:var(--warn)">⚡ <b>${today.join('、')}帶咗佢嚟：</b>${I.today}。</div>`:''}`);}
+
+/* ===== 養生 ===== */
+function renderHealth(){const box=$('healthBody'),C=CTX;
+let h=`<div class="seg"><button class="${HSEG==='quiz'?'on':''}" onclick="setHSeg('quiz')">🩺 體質檢查</button><button class="${HSEG==='hour'?'on':''}" onclick="setHSeg('hour')">⏰ 時辰養生</button><button class="${HSEG==='elem'?'on':''}" onclick="setHSeg('elem')">☯️ 五行體質</button></div>`;
+if(HSEG==='hour'){const hz=hourToZ(new Date().getHours());
+h+=`<div class="panel"><div class="ptitle">⏰ 經絡時鐘</div><div class="hint">中醫認為一日 12 個時辰，每個時辰由一條經絡（器官）「值班」。跟住時間表作息，身體會舒服啲。</div>
+${wheel(ORGANS.map((o,i)=>({lab:o,sub:HR[i],col:ELC[['木','木','金','金','土','土','火','火','水','水','火','火'][i]]})),hz,ORGANS[hz]+'經',ZHI[hz]+'時 '+HR[hz])}
+<div class="box" style="margin-top:.6rem">🕐 <b>${HOUR_TIPS[hz]}</b></div>
+<details><summary>睇晒 12 個時辰</summary>${HOUR_TIPS.map((t,i)=>`<div class="box${i===hz?'':' dim'}" style="font-size:.84rem">${t}</div>`).join('')}</details></div>`;
+if(WX){let w='';if(WX.rh>=80)w+=`<div class="box">💧 今日濕度${WX.rh}%，濕氣重容易身重、胃口差，少食凍嘢甜嘢，可以飲薏米赤小豆水。</div>`;
+else if(WX.rh<=45)w+=`<div class="box">🍂 今日乾燥（濕度${WX.rh}%），容易喉嚨乾、皮膚痕，多飲水，可食雪梨、百合、雪耳。</div>`;
+if(WX.app>=32)w+=`<div class="box">🥵 好熱，容易攰同中暑，避開正午曬太陽，飲暖水好過飲凍飲。</div>`;
+if(WX.app<=12)w+=`<div class="box">🥶 天凍，保暖頸背同腳底，可以飲薑茶暖身。</div>`;
+if(w)h+=`<div class="panel"><div class="ptitle">🌦️ 今日天氣 × 身體</div>${w}</div>`;}}
+else if(HSEG==='elem'){if(!C)h+=lockPanel('五行體質未解鎖');else{const{dist,S,fl}=C,overs=Object.keys(dist).filter(e=>dist[e]>=32),weaks=Object.keys(dist).filter(e=>dist[e]<=8),hlEl=weaks[0]||S.xi[0];
+const seasonEl=[11,0,1].includes(fl.mz)?'水':[2,3,4].includes(fl.mz)?'木':[5,6,7].includes(fl.mz)?'火':'金';
+h+=`<div class="panel"><div class="ptitle">☯️ 五行體質</div><div class="hint">五行對應身體唔同部位：木＝肝膽、火＝心、土＝脾胃、金＝肺、水＝腎。命中某種五行太多或太少，相關部位就要多留意。</div>
+<div class="box">🌿 <b>今日一句：</b><span class="wx${hlEl}">${HEALTH_LINE[hlEl]}</span></div>
+${['木','火','土','金','水'].map(e=>`<div class="statrow"><span class="wx${e}" style="width:4.5rem">${ELI[e]}${e}・${ELEM_HEALTH[e].organ.split('・')[0]}</span><div class="bar"><i data-w="${Math.min(100,dist[e]*2.2)}" style="background:${ELC[e]}"></i></div><span style="width:5rem;text-align:right">${dist[e]}% ${dist[e]>=32?'偏多':dist[e]<=8?'偏少':''}</span></div>`).join('')}
+${overs.map(e=>`<div class="box"><b class="wx${e}">${e}太多</b>（${ELEM_HEALTH[e].organ}負擔重）：容易${ELEM_HEALTH[e].over}。<br><small class="sub">可以留意／檢查：${ELEM_HEALTH[e].check}</small></div>`).join('')}
+${weaks.map(e=>`<div class="box"><b class="wx${e}">${e}太少</b>（${ELEM_HEALTH[e].organ}底子弱）：容易${ELEM_HEALTH[e].weak}。<br><small class="sub">可以留意／檢查：${ELEM_HEALTH[e].check}</small></div>`).join('')}
+${!overs.length&&!weaks.length?'<p>你五行分佈幾平均，保持作息定時就好 👍</p>':''}
+${overs.includes(seasonEl)?`<div class="box">🍂 而家係${seasonEl}旺嘅季節，加埋你本身${seasonEl}已經多，呢排要加倍留意。</div>`:weaks.includes(seasonEl)?`<div class="box">🍂 而家係${seasonEl}旺嘅季節，啱晒補返你偏少嘅${seasonEl}：${ELEM_LIFE[seasonEl].diet}。</div>`:''}</div>`;}}
+else{const qs=QS(),n=qs.length;
+if(TZRES&&TZMODE!=='quiz'){const j=tzJudge(TZRES.sc),main=j.ph==='是'||j.ph==='基本是'?[{k:'平和',v:TZRES.sc['平和']}]:j.res.filter(r=>r.j==='是'),tend=j.res.filter(r=>r.j==='傾向是');
+const showMain=main.length?main:(tend.length?[]:[j.res[0]]);
+h+=`<div class="panel"><div class="ptitle">🩺 你嘅體質報告 <small class="sub" style="font-weight:400">（${TZRES.date} 測試）</small></div>
+<div class="hint">根據中醫「九種體質」分類。分數 40 或以上＝屬於呢種體質；30–39＝有啲傾向；平和質要 60 分或以上兼其他都低先算。</div>
+${showMain.map(m=>tzCard(m.k,m.v,main.length?(m.k==='平和'&&j.ph==='基本是'?'基本係':'主要體質'):'最接近')).join('')}
+${tend.length?`<div class="box">🔸 <b>有啲傾向：</b>${tend.map(t=>{const T=TZ.find(x=>x.k===t.k);return`${T.ic}${t.k}質（${t.v}分）`;}).join('、')}<br><small class="sub">未算正式，但要開始留意。</small></div>`:''}
+${!main.length&&!tend.length?'<div class="box">✨ 冇明顯偏頗體質，但精力分數未夠高，未算完全「平和」。保持好習慣！</div>':''}
+<div class="ptitle" style="margin-top:.8rem">📊 九種體質分數</div>
+${TZ.map((t,i)=>{const v=TZRES.sc[t.k],c=t.k==='平和'?(v>=60?LVC[0]:LVC[1]):(v>=40?LVC[2]:v>=30?LVC[1]:LVC[0]);return`<div class="statrow"><span style="width:5.2rem">${t.ic} ${t.k}</span><div class="bar"><i data-w="${Math.max(2,v)}" style="background:${c};transition-delay:${i*.08}s"></i></div><span style="width:2.4rem;text-align:right">${v}</span></div>`;}).join('')}
+${tend.length?`<details><summary>睇傾向體質嘅建議</summary>${tend.map(t=>tzCard(t.k,t.v,'傾向')).join('')}</details>`:''}
+<div style="text-align:center;margin-top:.8rem"><button class="btn" onclick="startQuiz()">🔄 重新測試</button></div>
+<small class="sub">⚠️ 呢個係簡化版自我評估（每種體質 4 題），只供參考，唔可以代替中醫師診斷。如有不適請求醫。</small></div>`;}
+else{const q=qs[Math.min(QZ.i,n-1)],cur=QZ.ans[q.ti+'_'+q.ii];
+h+=`<div class="panel"><div class="ptitle">🩺 中醫體質檢查</div><div class="hint">共 ${n} 條問題，按<b>最近一年</b>嘅感覺揀答案就得，唔使諗太耐。做完會知道你屬於九種體質邊一種。</div>
+<div class="statrow"><span>第 <b>${QZ.i+1}</b> / ${n} 題</span><div class="bar"><i data-w="${QZ.i/n*100}" style="background:linear-gradient(90deg,var(--water),var(--gold))"></i></div></div>
+<div class="qcard qanim" key="${QZ.i}"><div class="qicon">${['🩺','🌿','🍵','🧘','💭'][QZ.i%5]}</div>
+<div class="qtext">最近一年，你${q.t}</div>
+<div class="qopts">${QOPT.map((o,i)=>`<button class="qopt${cur===i+1?' sel':''}" onclick="ansQ(${i+1})"><span>${o[0]}</span>${o[1]}</button>`).join('')}</div>
+<div style="margin-top:.8rem;display:flex;justify-content:space-between">${QZ.i>0?'<button class="btn2 mini" onclick="prevQ()">⬅ 上一題</button>':'<span></span>'}${TZRES?'<button class="btn2 mini" onclick="TZMODE=\'\';renderHealth();afterRender()">睇返上次結果</button>':''}</div></div></div>`;}}
+box.innerHTML=h;}
+function tzCard(k,v,label){const T=TZ.find(x=>x.k===k),C=CTX;let link='';
+if(C&&T.el){const d=C.dist[T.el];link=`<div class="box">☯️ <b>同你命盤對照：</b>${T.k}質主要關係到「<span class="wx${T.el}">${T.el}</span>」（${ELEM_HEALTH[T.el].organ}）。你命中${T.el}佔 ${d}%${d<=8?'，偏少——同測試結果有呼應，更要好好調理。':d>=32?'，偏多——相關器官負擔較重，要多留意。':'，屬正常範圍。'}</div>`;}
+return`<div class="tzcard"><div class="tzi">${T.ic}</div><div class="sub">${label}</div><div class="title">${T.k}質</div><div style="margin:.3rem 0">${v!=null?`分數 <b>${v}</b>`:''}</div>
+<p style="margin:.2rem 0">${T.plain}</p><small class="sub">常見表現：${T.sign}</small></div>
+<div class="box">🍲 <b>宜食：</b>${T.diet}</div><div class="box">🏃 <b>生活：</b>${T.life}</div><div class="box">🚫 <b>要避：</b>${T.avoid}</div>${link}`;}
+
+/* ===== 命盤 ===== */
+function renderNow(){const now=new Date(),rule=profile&&profile.rule?profile.rule:'zichu';
+const fl=calcPillars(now.getFullYear(),now.getMonth()+1,now.getDate(),now.getHours(),now.getMinutes(),true,rule);
+$('nowBody').innerHTML=`<small class="sub">${now.toLocaleString('zh-Hant')}（轉時辰會自動更新）</small><div class="pillars" style="margin-top:.4rem">
+${[['今年',fl.yg,fl.yz],['今月',fl.mg,fl.mz],['今日',fl.dg,fl.dz],['而家時辰',fl.hg,fl.hz]].map(([t,g,z],i)=>`<div class="pcard" style="animation-delay:${i*.08}s"><div class="pt">${t}</div><div class="bigc">${gsp(g)}${zsp(z)}</div></div>`).join('')}</div>`;}
+function pillarCard(title,palace,g,z,dg,isDay,i){const tg=isDay?'👤 你自己':tenGod(dg,g);
+return`<div class="pcard${isDay?' me':''}" style="animation-delay:${i*.1}s"><div class="pt">${title}</div><div class="pal">${palace}</div><div class="tg">${tg}</div>
+<div class="bigc">${gsp(g)}</div><div class="bigc">${zsp(z)}</div><div class="hid">藏：${CANG[z].map(x=>`<span class="wx${GEL[x]}">${GAN[x]}</span><small>${tenGod(dg,x)}</small>`).join(' ')}</div></div>`;}
+function renderChart(C){const box=$('chartBody');if(!C){box.innerHTML='';return;}const{pl,hasHour,dy,cur,risk}=C;
+let h=`<div class="panel"><div class="ptitle">📜 我的命盤（四柱八字）${hasHour?'':'<small class="sub">時辰唔知，只排三柱</small>'}</div>
+<div class="hint">出世嗰刻嘅年、月、日、時，各有一個「天干」（上）同「地支」（下），合共八粒字，所以叫「八字」。金框嗰柱嘅天干就係「你自己」。每粒字上面細字＝佢同你嘅十神關係。</div>
+<div class="pillars">${pillarCard('年柱',PALACE['年'],pl.yg,pl.yz,pl.dg,false,0)}${pillarCard('月柱',PALACE['月'],pl.mg,pl.mz,pl.dg,false,1)}${pillarCard('日柱',PALACE['日'],pl.dg,pl.dz,pl.dg,true,2)}${hasHour?pillarCard('時柱',PALACE['時'],pl.hg,pl.hz,pl.dg,false,3):''}</div>
+${profile.cal==='lunar'&&profile.ldisp?`<small class="sub">農曆 ${profile.ldisp} → 西曆 ${profile.bd}</small><br>`:''}${C.solNote?`<small class="sub">${C.solNote}</small>`:''}</div>`;
+h+=`<div class="panel"><div class="ptitle">🛤️ 人生十步大運</div><div class="hint">每十年換一次「大運」，好似遊戲換地圖，每張地圖嘅環境都唔同。金框＝你而家行緊嗰步。</div>
+<small class="sub">${dy.startTxt}${hasHour?'':'（時辰唔知，用中午近似）'}｜${dy.forward?'順行':'逆行'}</small>
+<div class="dyline">${dy.list.map((u,i)=>{const el=GEL[u.g],xi=C.S.xi.includes(el)||C.S.xi.includes(ZEL[u.z]);return`<div class="dy${i===cur?' cur':''}"><div style="font-weight:900">${gsp(u.g)}${zsp(u.z)}</div><div class="age">${Math.floor(u.age)}–${Math.floor(u.age)+9}歲</div><div style="font-size:.65rem">${i===cur?'📍而家':xi?'🍀':''}</div></div>`;}).join('')}</div>
+<small class="sub">🍀＝嗰步大運帶住你嘅幸運五行</small></div>`;
+let hh='';if(profile2&&profile2.bd){const[py,pm,pd]=profile2.bd.split('-').map(Number),p2h=profile2.bh>=0,B=calcPillars(py,pm,pd,p2h?profile2.bh:12,30,p2h,profile.rule),R=heHunAnalysis(pl,hasHour,B,p2h);
+const sc=Math.max(5,Math.min(100,Math.round(55+R.score*7)));
+hh=`<div class="box"><b>對方八字：</b>${gsp(B.yg)}${zsp(B.yz)} ${gsp(B.mg)}${zsp(B.mz)} ${gsp(B.dg)}${zsp(B.dz)}${p2h?' '+gsp(B.hg)+zsp(B.hz):''}</div>
+<div style="text-align:center;margin:.5rem 0"><div style="font-size:2.4rem" class="bob">💞</div><b style="font-size:1.1rem">${R.grade}</b>
+<div class="statrow" style="max-width:20rem;margin:.3rem auto"><span>默契值</span><div class="bar"><i data-w="${sc}" style="background:linear-gradient(90deg,#ff5a8a,var(--gold))"></i></div><span>${sc}</span></div>
+<small class="sub">相合位 ${R.he} 個／相撞位 ${R.cl} 個</small></div>
+${R.good.map(g=>`<div class="box">💚 ${g}</div>`).join('')}${R.bad.map(b=>`<div class="box">⚠️ ${b}</div>`).join('')}
+${!R.good.length&&!R.bad.length?'<div class="box">冇明顯合或撞，屬細水長流型。</div>':''}<button class="btn2 mini" onclick="clearHeHun()">清除合盤</button>`;}
+h+=`<div class="panel"><div class="ptitle">💞 兩人合盤</div><div class="hint">輸入另一半（或朋友）嘅生日，睇下兩個人嘅五行夾唔夾。純屬趣味！</div>
+<div class="grid"><div><label>對方出生日期（西曆）</label><input type="date" id="p2date" value="${profile2?profile2.bd:''}"></div>
+<div><label>對方時辰</label><select id="p2hour">${HOUR_OPTS(profile2?profile2.bh:-1)}</select></div><div style="justify-content:flex-end"><button class="btn" onclick="doHeHun()">💞 合盤</button></div></div>
+<div style="margin-top:.5rem">${hh}</div><small class="sub">關係好唔好，八成靠相處，兩成先係天生夾唔夾。切勿以此作重大決定。</small></div>`;
+h+=`<div class="panel"><div class="ptitle">🔬 進階：今日能量互動明細</div><details><summary>展開</summary>
+${risk.evs.length?risk.evs.map(e=>`<div style="font-size:.85rem"><span class="tag">${e.layer}</span>${zsp(e.fz)} <b>${RELP[e.t]}</b> 你嘅${POSP[e.nb.pos]} ${zsp(e.nb.z)} <small class="sub">（${e.xj==='喜'?'幸運能量':e.xj==='忌'?'要避能量':'中性'}）</small></div>`).join(''):'<small class="sub">今日冇互動。</small>'}
+${risk.notes.map(n=>`<div style="font-size:.85rem">・${n}</div>`).join('')}</details></div>`;
+box.innerHTML=h;}
+
+/* ===== 總渲染 ===== */
+let firstRender=true;
+function renderAll(){renderNow();
+if(!profile||!profile.bd){CTX=null;window.CTX=null;renderHUD(null);renderHome(null);renderWeather(null);renderRole(null);renderGods(null);renderHealth();renderChart(null);afterRender();return;}
+const C=computeCtx();CTX=C;window.CTX=C;window.FX_BIAS=C.S.xi;
+renderHUD(C);renderHome(C);renderWeather(C);renderRole(C);renderGods(C);renderHealth();renderChart(C);
+if(firstRender){animPage(CURTAB);firstRender=false;}
+afterRender();const nt=$('npcText');if(nt)typeWrite(nt,npcMsg(C));}
+
+/* ===== 背景五行字（更密更大） ===== */
+function startFx(){const cv=$('fx'),ctx=cv.getContext('2d');let W=0,H=0,ps=[];
+const ELS=['木','火','土','金','水'];
+const pick=()=>{const b=window.FX_BIAS;return b&&Math.random()<.5?b[Math.floor(Math.random()*b.length)]:ELS[Math.floor(Math.random()*5)];};
+const mk=init=>{const s=20+Math.random()*38;return{x:Math.random()*W,y:init?Math.random()*H:H+60,v:.15+Math.random()*.45,s,e:pick(),a:.07+Math.random()*.15,ph:Math.random()*6.28,rot:(Math.random()-.5)*.6,vr:(Math.random()-.5)*.004,glow:s>44};};
+const rs=()=>{const dpr=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0);
+const N=Math.min(85,Math.round(W*H/12000));while(ps.length<N)ps.push(mk(true));ps.length=N;};rs();addEventListener('resize',rs);
+let cleared=false;const loop=()=>{requestAnimationFrame(loop);
+if(!animOn()||document.hidden){if(!cleared){ctx.clearRect(0,0,W,H);cleared=true;}return;}cleared=false;
+ctx.clearRect(0,0,W,H);ctx.textAlign='center';ctx.textBaseline='middle';
+ps.forEach((p,i)=>{p.y-=p.v;p.ph+=.012;p.rot+=p.vr;const x=p.x+Math.sin(p.ph)*22;if(p.y<-60){ps[i]=mk(false);return;}
+ctx.save();ctx.translate(x,p.y);ctx.rotate(p.rot);ctx.globalAlpha=p.a*(0.75+0.25*Math.sin(p.ph*2));ctx.fillStyle=ELC[p.e];
+if(p.glow){ctx.shadowColor=ELC[p.e];ctx.shadowBlur=18;}ctx.font=`900 ${p.s}px "Noto Sans TC","PingFang TC",sans-serif`;ctx.fillText(p.e,0,0);ctx.restore();});};loop();}
+
+/* ===== 定時 ===== */
+let lastHzKey='';function hzKey(){const n=new Date();return n.toDateString()+'_'+hourToZ(n.getHours());}
+setInterval(()=>{const k=hzKey();if(lastHzKey&&k!==lastHzKey)renderAll();lastHzKey=k;},60000);
+setInterval(()=>{if(LOC)loadWx();},30*60e3);
+
+/* ===== 設定 ===== */
+let fs=parseFloat(S_get('bazi_fs'))||16;
+function setFS(d){fs=Math.min(24,Math.max(13,fs+d));document.documentElement.style.fontSize=fs+'px';S_set('bazi_fs',fs);}
+document.documentElement.style.fontSize=fs+'px';
+const savedAnim=S_get('bazi_anim'),reduceMotion=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(savedAnim==='0'||(savedAnim===null&&reduceMotion))document.body.classList.add('noanim');
+$('animBtn').onclick=()=>{document.body.classList.toggle('noanim');const on=animOn();S_set('bazi_anim',on?'1':'0');toast(on?'✨ 動畫已開啟':'動畫已關閉（慳電模式）');};
+sens=S_get('bazi_sens')||'std';advSS=S_get('bazi_advss')==='1';
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+window.addEventListener('load',()=>{
+$('engineBadge').textContent=usePrecise()?'曆法引擎：精確':'曆法引擎：近似（農曆輸入暫不可用）';
+const saved=S_get('bazi_profile');
+if(saved){try{profile=JSON.parse(saved);$('bdate').value=profile.bd;$('bhour').value=profile.bh;$('gender').value=profile.gender;$('rule').value=profile.rule;
+if(profile.cal){$('caltype').value=profile.cal;if(profile.cal==='lunar'){$('lyear').value=profile.lyear||'';$('lmonth').value=profile.lmonth||1;$('lday').value=profile.lday||1;$('lleap').checked=!!profile.lleap;}}
+calSwitch();if(profile.bt)$('btime').value=profile.bt;if(profile.lon)$('blon').value=profile.lon;$('btz').value=profile.tz||8;}catch(e){profile=null;}}
+const p2=S_get('bazi_p2');if(p2){try{profile2=JSON.parse(p2);}catch(e){}}
+const wc=S_get('bazi_wx');if(wc){try{WX=JSON.parse(wc);}catch(e){}}
+lastHzKey=hzKey();
+const t=S_get('bazi_tab');CURTAB=profile&&t?t:'home';
+document.querySelectorAll('.page').forEach(p=>p.classList.toggle('on',p.id==='pg-'+CURTAB));
+document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===CURTAB));
+renderAll();
+if(profile)setTimeout(()=>toast('🗡️ 歡迎返嚟，冒險者！'),600);
+locate(false);startFx();});
+</script>
+
+<script>
+/* ===== v2 追加功能 ===== */
+
+/* ---------- 1. 彈出式提示 ---------- */
+function toast(msg){const n=document.querySelectorAll('.pop').length,t=document.createElement('div');t.className='pop';t.textContent=msg;t.style.top=(30+n*8)+'%';document.body.appendChild(t);setTimeout(()=>t.remove(),2700);}
+
+/* ---------- 2. NPC 劇情對話＋好感度 ---------- */
+const AFFT=[0,30,80,150,250,400],AFFN=['陌生人','點頭之交','朋友','好朋友','知己','靈魂之交'];
+const AFFUNLOCK=['','解鎖：每日幸運方位','解鎖：每日最順時辰','解鎖：每日幸運數字','解鎖：每日貴人生肖','解鎖：所有秘密情報'];
+const HETU={木:[3,8],火:[2,7],土:[5,10],金:[4,9],水:[1,6]},SX='鼠牛虎兔龍蛇馬羊猴雞狗豬';
+const CHAT=['你知唔知？十一點前瞓覺，係最平嘅補運方法。','遇事唔決？去「易卦」頁問下易經，幫你理清思路。','飲多杯暖水，身體同運氣都會順啲。','人緣係最大嘅貴人運，今日主動同一個朋友打個招呼啦。','運氣好似天氣，有晴有雨，帶定遮就唔怕。','執下枱面、清走雜物，氣場會即刻清爽。','幸運色唔一定要成身著，一條頸巾、一個銀包都得。','做咗「虧佬指數」未？知道自己體質，養生先有方向。','肯行一步，運就郁一步。','唔開心嗰陣，出去曬十五分鐘太陽，係最簡單嘅「補火」方法。','做大決定前瞓一晚先，第二朝個腦會清醒好多。','多謝身邊幫過你嘅人，感恩心係最強嘅護身符。'];
+let NPC={lines:[],i:0,key:'',typing:false},npcTimer=null;
+function dk(){const n=new Date();return n.getFullYear()+'-'+(n.getMonth()+1)+'-'+n.getDate();}
+function npcAff(){return +(S_get('bazi_npc_aff')||0);}
+function affInfo(a){let k=0;while(k<AFFN.length-1&&a>=AFFT[k+1])k++;const last=k===AFFN.length-1;return{k,name:AFFN[k],pct:last?100:Math.round((a-AFFT[k])/(AFFT[k+1]-AFFT[k])*100),next:last?0:AFFT[k+1]-a};}
+function npcLines(C){const hh=C.now.getHours(),g=hh<5?'夜深喇':hh<11?'早晨':hh<14?'午安':hh<18?'下晝好':'夜晚好',f=FORT.find(x=>C.hp>=x[0]),L=[],k=affInfo(npcAff()).k,xi=C.S.xi[0];
+L.push(`${g}，${C.titles.main}！`);
+L.push(`今日係${GAN[C.fl.dg]}${ZHI[C.fl.dz]}日，運勢：${f[2]}「${f[1]}」`);
+L.push(['今日同你命盤冇乜碰撞，放膽出擊！','今日有少少碰撞，小心啲就得。','今日挑戰比較多，穩陣為上。'][C.wl]);
+if(C.wl>0)L.push(`最要留意：${C.worst[0][1]} ${C.worst[0][2]}——${ADVICE[C.worst[0][0]].split('，')[0]}。`);
+if(C.reds.length)L.push(`⏰ ${C.reds.map(x=>ZHI[x.z]+'時（'+HR[x.z]+'）').join('、')} 要特別小心。`);
+if(WX){const w=WXC[WX.code]||['','🌡️'];L.push(`${w[1]} 外面 ${Math.round(WX.t)}°C，${w[0]}，濕度 ${WX.rh}%。`);
+const tip=isRain(WX.code)||WX.pop12>=60?'☂️ 記得帶遮！':WX.pop12>=30?'🌂 袋定把縮骨遮。':WX.uvMax>=6?`🕶️ 紫外線 ${WX.uvMax}，記得防曬！`:'';if(tip)L.push(tip);
+L.push(`👕 今日著${WX.uvMax>=3?UVDEEP[xi]:UVLIGHT[xi]}最旺你。`);}else L.push(`👕 今日著${PAL[xi].name}最旺你。`);
+if(k>=1)L.push(`🔓 秘密情報：今日向${C.S.xi.map(e=>DIRECTION[e]).join('、')}行最順。`);
+if(k>=2){const b=C.hw.filter(x=>x.sc===0&&x.z>=3&&x.z<=10).slice(0,2);if(b.length)L.push(`🔓 秘密情報：今日最順時辰係 ${b.map(x=>ZHI[x.z]+'時（'+HR[x.z]+'）').join('、')}。`);}
+if(k>=3)L.push(`🔓 秘密情報：今日幸運數字 ${HETU[xi].join('、')}。`);
+if(k>=4){const ty=TIANYI[C.fl.dg]||[];if(ty.length)L.push(`🔓 秘密情報：今日嘅貴人係屬${ty.map(z=>SX[z]).join('、')}嘅人。`);}
+const chatted=S_get('bazi_npc_last')===dk(),ct=S_get('bazi_npc_chat');if(chatted&&ct)L.push('🍵 '+ct);
+L.push(chatted?'今日傾完喇，聽日記得再嚟搵我！':'得閒同我傾下偈啦，有獎㗎 😉');return L;}
+const NPC_HTML=`<div class="npc"><div class="npcav">🧙</div><div class="npcbox"><div class="npcname">軍師・玄機子<span class="aff" id="affLv"></span></div>
+<div id="npcText" class="npctext" onclick="npcClick()"></div>
+<div class="npcfoot"><small class="sub" id="npcCnt"></small><span id="npcAct"></span><button class="btn2 mini" id="npcNext" onclick="npcClick()">下一句 ▶</button></div></div></div>
+<div class="affrow"><span>💗 好感度</span><div class="bar"><i id="affBar" style="background:linear-gradient(90deg,#ff7aa8,#ffc2d9)"></i></div><small class="sub" id="affNum"></small></div>`;
+function npcAffUI(){const lv=$('affLv');if(!lv)return;const a=npcAff(),f=affInfo(a);lv.textContent='💗 '+f.name;$('affNum').textContent=f.next?`${a}（再 ${f.next} 升級）`:`${a}（滿級）`;requestAnimationFrame(()=>requestAnimationFrame(()=>{const b=$('affBar');if(b)b.style.width=f.pct+'%';}));}
+function npcActs(){return S_get('bazi_npc_last')===dk()?`<button class="btn2 mini" onclick="NPC.i=0;npcShow(true)">🔁 由頭再聽</button>`:`<button class="btn mini" onclick="npcChat()">🍵 同軍師傾計（有獎）</button>`;}
+function npcShow(anim){const el=$('npcText');if(!el)return;const t=NPC.lines[NPC.i]||'',last=NPC.i>=NPC.lines.length-1;
+$('npcCnt').textContent=`${NPC.i+1} / ${NPC.lines.length}`;$('npcNext').style.display=last?'none':'';$('npcAct').innerHTML=last?npcActs():'';el.classList.toggle('end',last);
+clearInterval(npcTimer);NPC.typing=false;if(!anim||!animOn()){el.textContent=t;return;}
+let k=0;el.textContent='';NPC.typing=true;npcTimer=setInterval(()=>{k++;el.textContent=t.slice(0,k);if(k>=t.length){clearInterval(npcTimer);NPC.typing=false;}},32);}
+function npcClick(){if(NPC.typing){clearInterval(npcTimer);NPC.typing=false;$('npcText').textContent=NPC.lines[NPC.i];return;}if(NPC.i<NPC.lines.length-1){NPC.i++;npcShow(true);}}
+function npcStart(C){if(!C||!$('npcText'))return;const L=npcLines(C),key=L.join('|');
+if(key!==NPC.key){NPC={lines:L,i:0,key,typing:false};npcShow(true);}else{NPC.i=Math.min(NPC.i,NPC.lines.length-1);npcShow(false);}npcAffUI();}
+function npcChat(){const today=dk();if(S_get('bazi_npc_last')===today||!CTX)return;
+const y=new Date();y.setDate(y.getDate()-1);const yk=y.getFullYear()+'-'+(y.getMonth()+1)+'-'+y.getDate();
+const st=S_get('bazi_npc_last')===yk?(+S_get('bazi_npc_streak')||0)+1:1,gain=10+Math.min(st,7)*2,a0=npcAff(),k0=affInfo(a0).k,a=a0+gain,f=affInfo(a);
+const chat=CHAT[(new Date().getDate()*7+a0)%CHAT.length];
+S_set('bazi_npc_aff',a);S_set('bazi_npc_last',today);S_set('bazi_npc_streak',st);S_set('bazi_npc_chat',chat);
+const xp=+(S_get('bazi_xp')||0)+15;S_set('bazi_xp',xp);document.querySelectorAll('.xpTotal').forEach(x=>x.textContent=xp);
+const base=npcLines(CTX),rw=[`💗 好感度 +${gain}${st>1?`（連續 ${st} 日 🔥）`:''}　🪙 積分 +15`];
+if(f.k>k0)rw.push(`🎉 我哋關係升級做「${f.name}」！${AFFUNLOCK[f.k]}`);
+NPC={lines:[...base.slice(0,-1),...rw,base[base.length-1]],i:base.length-2,key:base.join('|'),typing:false};
+npcShow(true);npcAffUI();floatXP($('npcText'),'💗 +'+gain);
+if(f.k>k0){confetti();toast('💗 好感度升級：'+f.name);}else toast('💗 好感度 +'+gain);}
+const _oldHome=renderHome;
+renderHome=function(C){_oldHome(C);if(!C)return;const nt=$('npcText');if(nt)nt.closest('.panel').innerHTML=NPC_HTML;};
+typeWrite=function(){npcStart(CTX);};
+skipType=function(){npcClick();};
+
+/* ---------- 3. 更清晰嘅五行雷達 ---------- */
+function radar(dist,fd){const S=CTX&&CTX.S,E=['木','火','土','金','水'],cx=150,cy=148,R=92;
+const MAX=Math.max(40,Math.ceil(Math.max(...E.map(e=>Math.max(dist[e],fd[e])))/10)*10),f=v=>Math.max(.04,Math.min(1,v/MAX));
+const pt=(k,r)=>{const a=(-90+k*72)*Math.PI/180;return[+(cx+R*r*Math.cos(a)).toFixed(1),+(cy+R*r*Math.sin(a)).toFixed(1)];};
+const poly=fn=>E.map((e,k)=>pt(k,fn(e)).join(',')).join(' ');let s='';
+[1,.75,.5,.25].forEach((g,i)=>{s+=`<polygon points="${poly(()=>g)}" fill="${i%2?'rgba(255,255,255,.05)':'rgba(255,255,255,.02)'}" stroke="#fff" stroke-opacity=".18"/>`;const[x,y]=pt(0,g);s+=`<text x="${x+5}" y="${y+4}" font-size="9" fill="#a99fd0">${Math.round(g*MAX)}%</text>`;});
+E.forEach((e,k)=>{const[x,y]=pt(k,1);s+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${ELC[e]}" stroke-opacity=".4" stroke-width="1.5"/>`;});
+s+=`<polygon class="grow g2" points="${poly(e=>f(fd[e]))}" fill="#55b9ff" fill-opacity=".15" stroke="#55b9ff" stroke-width="2" stroke-dasharray="6 4"/>`;
+s+=`<polygon class="grow" points="${poly(e=>f(dist[e]))}" fill="${GOLD}" fill-opacity=".28" stroke="${GOLD}" stroke-width="3"/>`;
+E.forEach((e,k)=>{const[x,y]=pt(k,f(dist[e])),[lx,ly]=pt(k,1.25),xi=S&&S.xi.includes(e);
+s+=`<circle class="grow" cx="${x}" cy="${y}" r="5" fill="${ELC[e]}" stroke="#fff" stroke-width="1.5"/>`;
+s+=`<circle cx="${lx}" cy="${ly}" r="20" fill="${ELC[e]}" fill-opacity=".2" stroke="${ELC[e]}" stroke-width="${xi?3:1.5}"${xi?' class="ringp"':''}/><text x="${lx}" y="${ly-1}" text-anchor="middle" font-size="15" font-weight="900" fill="${ELC[e]}">${e}</text><text x="${lx}" y="${ly+13}" text-anchor="middle" font-size="10" font-weight="900" fill="#fff">${dist[e]}%</text>`;});
+const hi=[...E].sort((a,b)=>dist[b]-dist[a]),tf=[...E].sort((a,b)=>fd[b]-fd[a])[0];
+return`<svg viewBox="0 0 300 300" class="radar">${s}</svg>
+<div class="rdleg"><span><i style="background:${GOLD}"></i>出世帶住（一世不變）</span><span><i style="background:#55b9ff"></i>今日時間能量（每日變）</span>${S?'<span>◎ 粗框閃動＝你嘅幸運五行</span>':''}</div>
+${E.map(e=>`<div class="statrow"><span class="wx${e}" style="width:4rem">${ELI[e]}${e}${S?(S.xi.includes(e)?'🍀':S.ji.includes(e)?'⚠️':''):''}</span><div style="flex:1"><div class="bar" style="height:.55rem"><i data-w="${Math.min(100,dist[e]/MAX*100)}" style="background:${GOLD}"></i></div><div class="bar" style="height:.4rem;margin-top:3px"><i data-w="${Math.min(100,fd[e]/MAX*100)}" style="background:#55b9ff"></i></div></div><span style="width:5.2rem;text-align:right;font-size:.78rem">出世${dist[e]}%<br>今日${fd[e]}%</span></div>`).join('')}
+<div class="box">💪 你最強：<b class="wx${hi[0]}">${hi[0]}</b>（${dist[hi[0]]}%）　🪶 最弱：<b class="wx${hi[4]}">${hi[4]}</b>（${dist[hi[4]]}%）<br>📅 今日最多：<b class="wx${tf}">${tf}</b>（${fd[tf]}%）${S?(S.xi.includes(tf)?'——正係你嘅幸運五行，今日順手 🍀':S.ji.includes(tf)?'——係你要避嘅五行，今日慢慢嚟':''):''}<br><small class="sub">🍀＝幸運五行　⚠️＝要避嘅五行</small></div>`;}
+
+/* ---------- 4. 虧佬指數（體質檢查＋簡答版） ---------- */
+const KNICK={平和:'底子分',氣虛:'電量虧',陽虛:'暖氣虧',陰虛:'水份虧',痰濕:'積濕積痰',濕熱:'濕熱上身',血瘀:'血路塞車',氣鬱:'心情塞車',特稟:'敏感體質'};
+const KUI=[[80,'虧到爆','🪫','身體亮紅燈！要認真休息，最好搵中醫師或醫生睇下。'],[60,'大虧','😵‍💫','幾方面都透支緊，係時候大幅調整作息飲食。'],[40,'中虧','😮‍💨','有幾樣偏差幾明顯，跟住下面建議調理。'],[20,'小虧','🙂','大致 OK，有少少偏差，及早調返就得。'],[0,'龍精虎猛','💪','狀態一流，繼續保持！']];
+function QS(){const g=profile?profile.gender:'M',lim=QZ.v==='short'?1:99,a=[];TZ.forEach((t,ti)=>t.items.slice(0,lim).forEach((it,ii)=>a.push({ti,ii,t:typeof it[0]==='function'?it[0](g):it[0]})));return a.sort((x,y)=>x.ii-y.ii||x.ti-y.ti);}
+function tzScore(ans,v){const lim=v==='short'?1:99,out={};TZ.forEach((t,ti)=>{const its=t.items.slice(0,lim);let raw=0;its.forEach((it,ii)=>{let x=ans[ti+'_'+ii]||1;if(ti===0&&it[1]===0)x=6-x;raw+=x;});out[t.k]=Math.round((raw-its.length)/(its.length*4)*100);});return out;}
+function kuiIndex(sc){const o=TZ.slice(1).map(t=>sc[t.k]).sort((a,b)=>b-a),top3=(o[0]+o[1]+o[2])/3;return Math.max(0,Math.min(100,Math.round(o[0]*.45+top3*.35+(100-sc['平和'])*.2)));}
+function kuiGauge(v){const cx=120,cy=120,R=96,r=70,P=(rad,val)=>{const a=Math.PI*(1-val/100);return(cx+rad*Math.cos(a)).toFixed(1)+','+(cy-rad*Math.sin(a)).toFixed(1);};
+let s=[[0,20,'#43e08a'],[20,40,'#b5e05a'],[40,60,'#ffc04d'],[60,80,'#ff8a4d'],[80,100,'#ff5577']].map(([a,b,c])=>`<path d="M${P(R,a)} A${R},${R} 0 0 1 ${P(R,b)} L${P(r,b)} A${r},${r} 0 0 0 ${P(r,a)}Z" fill="${c}" stroke="#0c0920" stroke-width="2"/>`).join('');
+['龍精虎猛','小虧','中虧','大虧','虧爆'].forEach((t,i)=>{const p=P(83,i*20+10).split(',');s+=`<text x="${p[0]}" y="${+p[1]+3}" text-anchor="middle" font-size="8.5" font-weight="900" fill="#1a1030">${t}</text>`;});
+s+=`<g class="needle" data-rot="${v*1.8}"><line x1="120" y1="120" x2="46" y2="120" stroke="#fff" stroke-width="4" stroke-linecap="round"/></g><circle cx="120" cy="120" r="9" fill="${GOLD}" stroke="#fff" stroke-width="2"/><text x="120" y="157" text-anchor="middle" font-size="24" font-weight="900" fill="${GOLD}">${v}</text>`;
+return`<svg viewBox="0 0 240 165" style="width:min(100%,18rem);display:block;margin:0 auto">${s}</svg>`;}
+function startQuiz(v){QZ={i:0,ans:{},v:v||'full'};S_set('bazi_tz_qz',JSON.stringify(QZ));TZMODE='quiz';renderHealth();window.scrollTo({top:0,behavior:'smooth'});}
+function prevQ(){if(QZ.i>0)QZ.i--;renderHealth();}
+function ansQ(v){const qs=QS(),q=qs[QZ.i];QZ.ans[q.ti+'_'+q.ii]=v;QZ.i++;S_set('bazi_tz_qz',JSON.stringify(QZ));
+if(QZ.i>=qs.length){const d=new Date();TZRES={sc:tzScore(QZ.ans,QZ.v),v:QZ.v,date:`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`};S_set('bazi_tz_res',JSON.stringify(TZRES));
+QZ={i:0,ans:{},v:QZ.v};S_set('bazi_tz_qz',JSON.stringify(QZ));TZMODE='';confetti();toast('🪫 虧佬指數出爐！');renderHealth();if(CTX)renderRole(CTX);afterRender();window.scrollTo({top:0,behavior:'smooth'});}
+else renderHealth();}
+function qPick(){return`<div class="panel hero"><div class="ptitle" style="justify-content:center">🪫 虧佬指數・中醫體質檢查</div>
+<div class="hint" style="text-align:left">答幾條關於身體感覺嘅問題，就會計出你嘅「虧佬指數」（身體有幾「虧」、偏離健康平衡有幾遠），同埋你屬中醫九種體質邊一種。</div>
+<div style="font-size:3.4rem" class="bob">🪫</div>
+<div class="verpick"><button class="vbtn" onclick="startQuiz('short')"><b>⚡ 簡答版</b><small>${TZ.length} 題・約 1 分鐘<br>快速睇個大概</small></button>
+<button class="vbtn" onclick="startQuiz('full')"><b>📋 完整版</b><small>${TZ.length*4} 題・約 4 分鐘<br>結果準確啲</small></button></div>
+${QZ.i>0?`<button class="btn2" onclick="TZMODE='quiz';renderHealth()">▶ 繼續上次（第 ${QZ.i+1} 題）</button>`:''}
+${TZRES?`<div style="margin-top:.6rem"><button class="btn2 mini" onclick="TZMODE='';renderHealth();afterRender()">📄 睇返上次結果</button></div>`:''}</div>`;}
+function qQuestion(){const qs=QS(),n=qs.length,i=Math.min(QZ.i,n-1),q=qs[i],cur=QZ.ans[q.ti+'_'+q.ii];
+return`<div class="panel"><div class="ptitle">🪫 虧佬指數・${QZ.v==='short'?'⚡ 簡答版':'📋 完整版'}</div><div class="hint">按<b>最近一年</b>嘅感覺揀，唔使諗太耐。</div>
+<div class="statrow"><span>第 <b>${i+1}</b> / ${n} 題</span><div class="bar"><i style="width:${i/n*100}%;background:linear-gradient(90deg,var(--water),var(--gold))"></i></div></div>
+<div class="qcard qanim"><div class="qicon">${['🩺','🌿','🍵','🧘','💭'][i%5]}</div><div class="qtext">最近一年，你${q.t}</div>
+<div class="qopts">${QOPT.map((o,k)=>`<button class="qopt${cur===k+1?' sel':''}" onclick="ansQ(${k+1})"><span>${o[0]}</span>${o[1]}</button>`).join('')}</div>
+<div style="margin-top:.8rem;display:flex;justify-content:space-between">${i>0?'<button class="btn2 mini" onclick="prevQ()">⬅ 上一題</button>':`<button class="btn2 mini" onclick="TZMODE='pick';renderHealth()">⬅ 返回</button>`}</div></div></div>`;}
+function qReport(){const sc=TZRES.sc,j=tzJudge(sc),k=kuiIndex(sc),L=KUI.find(x=>k>=x[0]),short=TZRES.v==='short';
+const main=j.ph==='是'||j.ph==='基本是'?[{k:'平和',v:sc['平和']}]:j.res.filter(r=>r.j==='是'),tend=j.res.filter(r=>r.j==='傾向是'),show=main.length?main:(tend.length?[]:[j.res[0]]),drains=j.res.filter(r=>r.v>=30).slice(0,3);
+return`<div class="panel" style="text-align:center"><div class="ptitle" style="justify-content:center">🪫 你嘅虧佬指數</div>
+<div class="hint" style="text-align:left">0–100 分：分數越高＝身體越「虧」（越偏離健康平衡）。由九種體質分數綜合計出嚟。</div>
+${kuiGauge(k)}<div style="font-size:2.8rem" class="bob">${L[2]}</div><div class="title">${L[1]}</div><p>${L[3]}</p>
+${drains.length?`<div>最「虧」嘅地方：${drains.map(r=>{const T=TZ.find(x=>x.k===r.k);return`<span class="chip lv${r.v>=40?2:1}">${T.ic} ${KNICK[r.k]} ${r.v}</span>`;}).join('')}</div>`:'<div class="enc">冇明顯「虧」嘅地方 🎉</div>'}
+<small class="sub">${TZRES.date} 測試・${short?'⚡ 簡答版':'📋 完整版'}</small></div>
+<div class="panel"><div class="ptitle">🩺 體質報告</div><div class="hint">中醫「九種體質」：40 分或以上＝屬於呢種體質；30–39＝有啲傾向；平和質要 60 分以上兼其他都低先算。</div>
+${show.map(m=>tzCard(m.k,m.v,main.length?(m.k==='平和'&&j.ph==='基本是'?'基本係':'主要體質'):'最接近')).join('')}
+${tend.length?`<div class="box">🔸 <b>有啲傾向：</b>${tend.map(t=>`${TZ.find(x=>x.k===t.k).ic}${t.k}質（${t.v}分）`).join('、')}</div>`:''}
+<div class="ptitle" style="margin-top:.8rem">📊 九項分數</div>
+${TZ.map((t,i)=>{const v=sc[t.k],c=t.k==='平和'?(v>=60?LVC[0]:LVC[1]):(v>=40?LVC[2]:v>=30?LVC[1]:LVC[0]);return`<div class="statrow"><span style="width:7.8rem;font-size:.8rem">${t.ic} ${t.k}<small class="sub">・${KNICK[t.k]}</small></span><div class="bar"><i data-w="${Math.max(2,v)}" style="background:${c};transition-delay:${i*.08}s"></i></div><span style="width:2.2rem;text-align:right">${v}</span></div>`;}).join('')}
+<small class="sub">平和＝底子分（越高越好）；其餘八項越高越「虧」。</small>
+${tend.length?`<details><summary>睇傾向體質嘅建議</summary>${tend.map(t=>tzCard(t.k,t.v,'傾向')).join('')}</details>`:''}
+${short?`<div class="box">⚡ 簡答版每種體質只問 1 題，結果比較粗略，想準啲可以做完整版。<br><button class="btn2 mini" style="margin-top:.3rem" onclick="startQuiz('full')">📋 做完整版</button></div>`:''}
+<div style="text-align:center;margin-top:.8rem"><button class="btn" onclick="TZMODE='pick';renderHealth()">🔄 重新測試</button></div>
+<small class="sub">⚠️ 簡化版自我評估，只供參考，唔可以代替中醫師診斷。</small></div>`;}
+function quizHTML(){if(TZMODE==='quiz')return qQuestion();if(TZRES&&TZMODE!=='pick')return qReport();return qPick();}
+const _oldRH=renderHealth;
+renderHealth=function(){_oldRH();const box=$('healthBody'),seg=box&&box.querySelector('.seg');if(!seg)return;seg.querySelector('button').innerHTML='🪫 虧佬指數';if(HSEG==='quiz')box.innerHTML=seg.outerHTML+quizHTML();};
+
+/* ---------- 5. 定位修正（等太耐自動改用網絡估算） ---------- */
+function locate(force){const saved=JSON.parse(S_get('bazi_loc')||'null');if(saved&&!force){LOC=saved;loadWx();return;}
+WXERR='📡 定位中…';renderWeather(CTX);let done=false;const fb=()=>{if(done)return;done=true;ipLocate();},tm=setTimeout(fb,9000);
+if(window.isSecureContext===false||!navigator.geolocation){clearTimeout(tm);WXERR='⚠️ 呢個開法唔支援 GPS，改用網絡估算位置…';renderWeather(CTX);return fb();}
+try{navigator.geolocation.getCurrentPosition(p=>{if(done)return;done=true;clearTimeout(tm);setLoc(p.coords.latitude,p.coords.longitude,null,true);},()=>{clearTimeout(tm);fb();},{timeout:8000,maximumAge:6e5});}catch(e){clearTimeout(tm);fb();}}
+async function ipLocate(){const src=[['https://ipwho.is/',j=>j.success!==false&&j.latitude?[j.latitude,j.longitude,j.city]:null],['https://ipapi.co/json/',j=>j.latitude?[j.latitude,j.longitude,j.city]:null]];
+for(const[u,f]of src){try{const r=await fetch(u),v=f(await r.json());if(v)return setLoc(v[0],v[1],(v[2]||'')+'（網絡估算）');}catch(e){}}setLoc(22.32,114.17,'香港（預設）');}
+
+/* ---------- 6. 易經占卜 ---------- */
+const HEXRAW=['天天乾|5|自強不息|好似龍飛上天，能量滿瀉。啱主動出擊、做領導，但唔好自大，太盡會反噬。','地地坤|4|包容承載|好似大地，宜跟隨、配合、支援，唔好搶做主角。穩穩陣陣，有好結果。','水雷屯|2|萬事起頭難|好似種子破土，開頭好多困難。唔好急，先搵幫手、打好基礎。','山水蒙|3|啟蒙學習|仲未睇得清楚，好似霧入面行路。虛心請教有經驗嘅人，邊做邊學。','水天需|3|耐心等待|時機未到，好似等落完雨先出門。準備好自己，時機自然會嚟。','天水訟|2|爭執糾紛|容易有爭拗。退一步海闊天空，唔好鬥到底，搵人調解。','地水師|3|帶兵出征|要有組織、紀律同可靠嘅領頭人。做大事要計劃周詳、名正言順。','水地比|4|親近合作|好人緣、易得人支持。主動同人組隊，但要揀啱人，唔好遲到。','風天小畜|3|小有積蓄|有啲進展但未成大事，好似密雲未落雨。先儲小錢小力，耐心累積。','天澤履|2|如履虎尾|好似踩住老虎尾行路，有風險。守禮、謹慎、低調，就可以安全過關。','地天泰|5|通泰順利|天地交流，上下一心，好事連連。乘勢做事，但順境要居安思危。','天地否|1|閉塞不通|上下唔溝通，做事卡住。宜收斂、保存實力，等轉運。','天火同人|4|志同道合|同人齊心就成功。開放、公平對人，搵志同道合嘅夥伴。','火天大有|5|大豐收|好似太陽高照，收穫豐富。分享成果、保持謙虛，福氣更長久。','地山謙|5|謙虛得福|高山甘願企喺地下面，謙虛嘅人最終最有着數。低調做事，百事順。','雷地豫|4|喜悅安樂|心情好、氣氛好，啱計劃、慶祝、推廣。但唔好玩物喪志。','澤雷隨|4|隨機應變|跟隨啱嘅人同潮流，靈活變通會順。唔好死守舊方法。','山風蠱|3|撥亂反正|舊問題積落嚟要處理。好似大掃除，執完先可以重新開始。','地澤臨|4|好運來臨|好事漸漸行近，啱主動推進。好景有時限，把握時機。','風地觀|3|觀察思考|先睇清形勢、唔好急住郁。多聽多睇，做好榜樣。','火雷噬嗑|2|咬斷障礙|有阻滯或小人，要果斷處理、講清規矩，必要時用法律保障自己。','山火賁|3|包裝修飾|外表重要，但內容更重要。小事得，大事要睇清本質。','山地剝|1|剝落衰退|好似牆身剝落，運勢走下坡。唔好冒險擴張，守住根本。','地雷復|4|重新開始|冬去春來，事情開始好轉。啱重新出發、改過、恢復好習慣。','天雷無妄|3|順其自然|唔好有歪念、唔好走捷徑。腳踏實地，意外自然少。','山天大畜|4|厚積薄發|儲夠實力、知識，大事可成。啱進修、儲錢、做長線計劃。','山雷頤|3|養生養德|重點係「養」：食得健康、講嘢小心。照顧好身心先再諗其他。','澤風大過|2|負擔過重|好似橫樑頂唔住，壓力過大。要減負、搵人分擔，唔好硬撐。','水水坎|1|重重險阻|一浪接一浪嘅困難。保持誠信同冷靜，一步一步行，終會脫險。','火火離|4|光明依附|好似火要依附木先燒得旺。依靠啱嘅人同平台，保持清醒就會發光。','澤山咸|4|心有靈犀|感應、吸引、緣份。感情人際有火花，真誠交流最緊要。','雷風恆|4|持之以恆|貴乎堅持，唔好三分鐘熱度。守住方向，長遠自然有成。','天山遯|2|適時退避|形勢唔利，識退先係智慧。暫時抽身、避開是非，保存實力。','雷天大壯|4|氣勢強盛|力量好大，但唔好恃強衝過龍。走正路，力量先用得其所。','火地晉|5|步步高升|好似太陽升起，主升職、進步、被賞識。積極表現自己。','地火明夷|1|光明受傷|好似太陽落山，環境對你唔利。收埋鋒芒、低調保護自己，等天光。','風火家人|4|家和萬事興|重點喺屋企同團隊內部。各安其位、互相照顧，先向外發展。','火澤睽|2|意見分歧|人與人睇法唔同、易有隔膜。求同存異，小事可做，大事先溝通。','水山蹇|1|寸步難行|前有水後有山，好難行。停一停、搵貴人幫手，唔好硬闖。','雷水解|4|雨過天晴|困難開始解開。快啲處理手尾、放低恩怨，向前行。','山澤損|3|先捨後得|減少啲嘢反而有益：減開支、減慾望、幫人。真誠付出有回報。','風雷益|5|增益得利|好似得到補給，啱做大事、投資自己、幫人。見好就學，有錯就改。','澤天夬|2|果斷決裂|係時候當機立斷，但要光明正大，唔好衝動。','天風姤|2|不期而遇|突然遇到嘅人或事要小心分辨好壞。誘惑多，唔好輕易承諾。','澤地萃|4|聚集人氣|人同資源聚埋一齊，啱開會、搞活動、組團隊。要防混亂。','地風升|5|穩步上升|好似樹苗慢慢長高，一步一步向上。啱見貴人、進修、升級。','澤水困|1|困境受阻|好似池塘乾涸，資源唔夠、講嘢冇人聽。少講多做，守住信念熬過去。','水風井|3|源源不絕|好似一口井，要定期維修先有清水。重視基本功、持續提升自己。','澤火革|3|變革更新|係時候改變！時機成熟就大膽改，但要有充分理由同準備。','火風鼎|5|鼎新穩固|好似煮飯嘅大鼎，代表新秩序、成就、地位。合作協調，大有可為。','雷雷震|2|雷聲震動|突發事件嚇一跳，但只要冷靜唔亂，反而變得更穩陣。','山山艮|3|適可而止|識得停。唔好諗太多、做太多，靜落嚟先睇得清。','風山漸|4|循序漸進|好似雀鳥慢慢飛高，按部就班最好。感情亦主慢慢嚟有好結果。','雷澤歸妹|2|名不正言不順|次序亂咗，或者關係唔對等。唔好急於求成，先搞清角色。','雷火豐|4|盛大豐盛|去到頂峰好風光。享受成果之餘，要預備盛極而衰。','火山旅|3|出門在外|好似旅人人生路不熟。低調守規矩、小心財物，宜短期安排。','風風巽|3|柔順滲透|好似風慢慢吹入去。用溫和方法、多溝通，跟有實力嘅人學。','澤澤兌|4|喜悅溝通|開心、口才好、人緣佳。真誠講嘢，唔好花言巧語。','風水渙|3|化散重聚|人心散、事情散，需要重新凝聚。放低成見，搵共同目標。','水澤節|3|有節有度|使錢、時間、情緒都要節制，但唔好過份刻薄自己。','風澤中孚|4|誠信感人|誠意可以打動人，連難搞嘅人都會被感化。講信用就會順。','雷山小過|2|小事可為|只宜做小事、唔宜做大事。低調謹慎，唔好好高騖遠。','水火既濟|3|大功告成|事情已完成，但要小心「先好後亂」。保持警覺，守成為主。','火水未濟|3|未完待續|仲差最後一步。唔好放棄，小心收尾，希望仲喺度。'];
+const HEX=HEXRAW.map(s=>{const p=s.split('|');return[p[0][0],p[0][1],p[0].slice(2),+p[1],p[2],p[3]];});
+const TRI=['地','雷','水','澤','山','火','風','天'],TRIN={天:'乾',澤:'兌',火:'離',雷:'震',風:'巽',水:'坎',山:'艮',地:'坤'},TRIEL={天:'金',澤:'金',火:'火',雷:'木',風:'木',水:'水',山:'土',地:'土'};
+const LVN=['','難','慎','平','吉','大吉'],LVCOL=['','#ff5577','#ff9a3c','#ffd95e','#7ee08a','#43e08a'];
+const DEC={5:'✅ 可以放手去做！',4:'👍 宜進行，留意細節就得',3:'🤔 可以做，但要準備充足或者再觀察下',2:'⚠️ 建議暫緩，或者換個方法',1:'⛔ 唔建議而家做，等待更好時機'};
+const YAON=['初爻','二爻','三爻','四爻','五爻','上爻'],YVN={6:'⚋ 老陰（會變）',7:'⚊ 少陽',8:'⚋ 少陰',9:'⚊ 老陽（會變）'};
+const YAOPOS=['初爻（最底）：事情啱啱開始，宜觀察、打好基礎','二爻：內部／基層，守住中間路線最好','三爻：轉折關口，容易進退兩難，要小心','四爻：接近目標，伴君如伴虎，要謹慎','五爻：最佳位置，你有主導權','上爻（最頂）：去到盡頭，物極必反，見好就收'];
+const YJCAT=[['work','💼','工作'],['money','💰','錢財'],['love','💞','感情'],['health','❤️','健康'],['home','🏠','家庭'],['study','📚','學業'],['travel','✈️','出行'],['other','🎯','其他']];
+const YJTIP={work:['時機未到，先唔好轉工或大改動，做好手頭嘢','可以推進，但要同上司同事溝通好','好時機！啱提案、見工、爭取升職'],money:['守財為上，唔好投資、借錢畀人','小心理財，量力而為，唔好貪','財運順，可以按計劃投資或談價，但唔好賭'],love:['感情要畀多啲耐性同空間，唔好逼對方','慢慢嚟，多溝通、多聆聽','緣份順，啱表白、約會、傾未來'],health:['留意身體警號，早啲睇醫生，唔好捱','注意作息飲食，預防勝於治療','狀態好，啱開始運動或新習慣'],home:['屋企易有摩擦，退一步，少爭拗','多陪家人，有事攤開講','家宅和順，啱搬屋、裝修、聚會'],study:['先打好基礎，唔好急住考試或報名','按部就班溫習，搵老師指點','讀書運好，啱考試、進修、報課程'],travel:['出行要小心，可以改期就改期','行程預多啲時間，睇實財物','出行順利，啱旅行、出差'],other:['而家唔係好時機，先等等、諗清楚','可以做，但要計劃周詳','時機好，放膽去做']};
+const yjRead=n=>n===0?'六爻都冇變：以「本卦」為準，事情會照而家方向發展。':n<=2?'有少量變爻：以「本卦」為主，再參考變爻位置提示。':n===3?'一半爻變：「本卦」同「變卦」一樣重要，事情正喺轉變中。':n<6?'大部分爻變：以「變卦」為主，事情會有較大變化。':'六爻全變：局面會大逆轉，以「變卦」為準。';
+let YJ={cat:'other',q:'',lines:[],started:false,busy:false,last:null};
+function yjHex(lines){const b=lines.map(v=>v===7||v===9?1:0),ch=lines.map(v=>v===6||v===9),b2=b.map((x,i)=>ch[i]?1-x:x);
+const id=t=>{const lo=TRI[t[0]+2*t[1]+4*t[2]],up=TRI[t[3]+2*t[4]+4*t[5]];return HEX.findIndex(h=>h[0]===up&&h[1]===lo);};
+return{b,ch,b2,ben:id(b),bian:id(b2),n:ch.filter(Boolean).length};}
+function yaoBuild(){let s='';for(let i=0;i<6;i++){const v=YJ.lines[i];if(v==null)s+='<div class="yao empty"><i></i></div>';else s+=`<div class="yao ${v===7||v===9?'yang':'yin'}${v===6||v===9?' chg':''}${i===YJ.lines.length-1?' new':''}"><i></i><i></i></div>`;}return`<div class="hexg">${s}</div>`;}
+function yaoStatic(bits,ch){return`<div class="hexg sm">${bits.map((x,i)=>`<div class="yao ${x?'yang':'yin'}${ch&&ch[i]?' chg':''}"><i></i><i></i></div>`).join('')}</div>`;}
+const yjCatOf=k=>YJCAT.find(c=>c[0]===k)||YJCAT[7];
+function yjCat(k){const q=$('yjq');if(q)YJ.q=q.value;YJ.cat=k;renderYijing();}
+function yjStart(){const q=$('yjq');YJ.q=(q?q.value:'').trim();const hist=JSON.parse(S_get('bazi_yj')||'[]');
+if(YJ.q&&hist.some(r=>r.q===YJ.q&&r.d===dk())&&!confirm('你今日已經問過同一件事喇。易經講「一事不二占」，第一次嘅答案最值得參考。\n仍然要再問？'))return;
+YJ.started=true;YJ.lines=[];YJ.last=null;renderYijing();}
+function yjThrow(cb){if(YJ.busy||YJ.lines.length>=6)return;YJ.busy=true;
+const rb=()=>window.crypto&&crypto.getRandomValues?crypto.getRandomValues(new Uint8Array(1))[0]&1:(Math.random()<.5?1:0);
+const c=[rb(),rb(),rb()].map(x=>x?3:2);YJ.last=c;const box=$('yjCoins');
+if(box)box.innerHTML=c.map((v,i)=>`<div class="coin flip${v===2?' b':''}" style="animation-delay:${i*.1}s"><span>${v===3?'正':'背'}</span></div>`).join('');
+setTimeout(()=>{YJ.lines.push(c[0]+c[1]+c[2]);YJ.busy=false;renderYijing();
+if(YJ.lines.length===6){yjSave();afterRender($('pg-yj'));confetti();toast('☯️ 卦象已成！');window.scrollTo({top:0,behavior:'smooth'});}else if(cb)cb();},animOn()?1150:30);}
+function yjAuto(){const step=()=>{if(YJ.lines.length<6)yjThrow(()=>setTimeout(step,250));};step();}
+function yjSave(){const h=JSON.parse(S_get('bazi_yj')||'[]');h.unshift({d:dk(),t:new Date().toLocaleString('zh-Hant',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}),cat:YJ.cat,q:YJ.q,lines:YJ.lines.slice()});S_set('bazi_yj',JSON.stringify(h.slice(0,10)));}
+function yjReset(){YJ={cat:YJ.cat,q:'',lines:[],started:false,busy:false,last:null};renderYijing();window.scrollTo({top:0,behavior:'smooth'});}
+function yjLoad(i){const r=JSON.parse(S_get('bazi_yj')||'[]')[i];if(!r)return;YJ={cat:r.cat,q:r.q,lines:r.lines.slice(),started:true,busy:false,last:null};renderYijing();afterRender($('pg-yj'));window.scrollTo({top:0,behavior:'smooth'});}
+function yjClear(){if(confirm('清除所有問卦紀錄？')){try{localStorage.removeItem('bazi_yj');}catch(e){}renderYijing();}}
+function yjResult(){const H=yjHex(YJ.lines),A=HEX[H.ben],B=HEX[H.bian],ci=yjCatOf(YJ.cat),C=CTX;
+const card=(X,bits,ch,label)=>`<div class="hexcard"><div class="sub">${label}</div><div style="margin-top:.4rem">${yaoStatic(bits,ch)}</div><div class="hxn">${X[2]}</div><div class="sub" style="font-size:.72rem">${X[0]}${X[1]}・${TRIN[X[0]]}上${TRIN[X[1]]}下</div><span class="chip" style="color:${LVCOL[X[3]]};border-color:${LVCOL[X[3]]}">${LVN[X[3]]}</span></div>`;
+let h=`<div class="box">❓ ${ci[1]} <b>${esc(YJ.q)||'（心中所想嘅事）'}</b></div>
+<div class="hexpair">${card(A,H.b,H.ch,'📍 本卦＝而家形勢')}${H.n?`<div class="harrow">➜</div>${card(B,H.b2,null,'🔮 變卦＝之後發展')}`:''}</div>
+<div class="tzcard"><div class="sub" style="font-size:.8rem">易經第 ${H.ben+1} 卦</div><div class="title">${A[2]}卦・${A[4]}</div><p style="text-align:left;margin:.5rem 0 0">${A[5]}</p></div>
+<div class="box">🧭 <b>決策建議：</b>${DEC[A[3]]}</div>
+<div class="box">${ci[1]} <b>${ci[2]}方面：</b>${YJTIP[ci[0]][A[3]>=4?2:A[3]===3?1:0]}。</div>`;
+if(H.n)h+=`<div class="box">🔄 <b>會變嘅位置（紅色閃動嗰幾條）：</b><br>${H.ch.map((c,i)=>c?'・'+YAOPOS[i]:null).filter(Boolean).join('<br>')}</div>
+<div class="box">🔮 <b>之後發展「${B[2]}卦・${B[4]}」：</b>${B[5]}<br>${B[3]>A[3]?'📈 先難後易：撐過而家，之後會好轉。':B[3]<A[3]?'📉 先易後難：開頭順，後勁要小心，見好就收。':'➡️ 走勢平穩：之後發展同而家差唔多。'}</div>`;
+h+=`<div class="box">📖 <b>點樣睇：</b>${yjRead(H.n)}</div>`;
+if(C){const ue=TRIEL[A[0]];h+=`<div class="box">☯️ <b>同你命盤：</b>上卦「${TRIN[A[0]]}」屬<span class="wx${ue}">${ue}</span>${C.S.xi.includes(ue)?'，係你嘅幸運五行，外在形勢幫你 🍀':C.S.ji.includes(ue)?'，係你要避嘅五行，外面阻力大啲，更要穩陣':'，對你中性'}。</div>`;}
+h+=`<div style="text-align:center;margin-top:.8rem"><button class="btn" onclick="yjReset()">🪙 問另一件事</button></div>
+<small class="sub">卦象係幫你換角度思考嘅工具，最終決定權喺你手。涉及健康、法律、大額金錢，請以專業意見為準。</small>`;return h;}
+function renderYijing(){const box=$('yjBody');if(!box)return;const n=YJ.lines.length,ci=yjCatOf(YJ.cat);
+let h=`<div class="panel"><div class="ptitle">☯️ 易經占卜・遇事問卦</div><div class="hint">猶豫唔決嗰陣，可以問下易經。用傳統「三錢法」：擲 3 個銅錢 6 次（正面＝3、背面＝2），由下而上砌出一個卦。卦象唔係「命中注定」，而係幫你睇清形勢。</div>`;
+if(!YJ.started){h+=`<div class="sub" style="margin:.3rem 0">① 揀你想問邊方面：</div><div class="yjcats">${YJCAT.map(c=>`<button class="ycat${YJ.cat===c[0]?' on':''}" onclick="yjCat('${c[0]}')">${c[1]}<br>${c[2]}</button>`).join('')}</div>
+<div class="sub" style="margin:.7rem 0 .3rem">② 寫低你嘅問題（一次問一件事，越具體越好，可留空）：</div>
+<input id="yjq" value="${esc(YJ.q)}" placeholder="例如：我應唔應該接受呢份新工？" style="width:100%">
+<div class="box" style="font-size:.82rem">🧘 <b>問卦小貼士</b><br>・靜落嚟，深呼吸三下，心入面諗住個問題<br>・問「應唔應該做／會點發展」最好<br>・<b>同一件事唔好重複問</b>（一事不二占），第一次嘅答案最值得參考</div>
+<div style="text-align:center;margin-top:.7rem"><button class="btn big" onclick="yjStart()">🪙 開始起卦</button></div>`;}
+else if(n<6){h+=`<div class="box">❓ ${ci[1]} <b>${esc(YJ.q)||'（心中所想嘅事）'}</b></div>
+<div class="yjwrap"><div>${yaoBuild()}</div><div class="yjlog">${YJ.lines.map((v,i)=>`<div>${YAON[i]}：${YVN[v]}</div>`).join('')||'<small class="sub">由最底嗰條（初爻）開始砌</small>'}</div></div>
+<div class="coins" id="yjCoins">${(YJ.last||[3,2,3]).map(v=>`<div class="coin${v===2?' b':''}"><span>${v===3?'正':'背'}</span></div>`).join('')}</div>
+<div style="text-align:center"><div class="sub">第 ${n+1} / 6 次</div><button class="btn big" onclick="yjThrow()">🪙 擲銅錢</button> <button class="btn2" onclick="yjAuto()">⚡ 自動擲完</button></div>`;}
+else h+=yjResult();
+h+='</div>';
+const hist=JSON.parse(S_get('bazi_yj')||'[]');
+if(hist.length)h+=`<div class="panel"><div class="ptitle">📚 問卦紀錄</div>${hist.map((r,i)=>{const X=HEX[yjHex(r.lines).ben];return`<div class="quest" onclick="yjLoad(${i})"><span>${yjCatOf(r.cat)[1]}</span><span class="qt">${esc(r.q)||'心中所想'}<br><small class="sub">${r.t}</small></span><b style="color:${LVCOL[X[3]]}">${X[2]}卦</b></div>`;}).join('')}<button class="btn2 mini" onclick="yjClear()">清除紀錄</button></div>`;
+box.innerHTML=h;}
+
+/* ---------- 7. 加入「易卦」分頁 ---------- */
+(function(){const sec=document.createElement('section');sec.className='page';sec.id='pg-yj';sec.innerHTML='<div id="yjBody"></div>';document.querySelector('main').insertBefore(sec,$('pg-chart'));
+const b=document.createElement('button');b.dataset.tab='yj';b.setAttribute('onclick',"showTab('yj')");b.innerHTML='<span>☯️</span>易卦';const nav=document.querySelector('.tabbar');nav.insertBefore(b,nav.querySelector('[data-tab="chart"]'));})();
+const _oldShow=showTab;showTab=function(t){if(t==='yj'&&!YJ.busy)renderYijing();_oldShow(t);};
+renderYijing();
+</script>
+
+</body></html>
