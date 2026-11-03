@@ -1,5 +1,4 @@
-<!DOCTYPE html><html lang="zh-Hant"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
-<meta charset="utf-8">
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0c0920">
@@ -1048,7 +1047,7 @@ const loc=`<div class="wxloc">📍 <b>${LOC?esc(LOC.name):'未定位'}</b><butto
 <input id="wxq" placeholder="輸入城市（中／英）" style="width:9.5rem" onkeydown="if(event.key==='Enter')searchCity()"><button class="btn2 mini" onclick="searchCity()">搜尋</button></div>`;
 if(!WX){box.innerHTML=`<div class="panel"><div class="ptitle">🌦️ 當地天氣</div>${loc}<p class="sub">${WXERR||'天氣載入中…（第一次用會問你拎定位權限）'}</p></div>`;return;}
 const W=WX,[ul,uc]=uvLv(W.uvMax),adv=outingAdvice(W,C),wel=weatherElems(W);
-const strip=W.hrs.map(x=>{const L=C?hwLvl(C.hw[hourToZ(x.h)].sc):null;const[,i2]=WXC[x.code]||['','🌡️'];
+const strip=(W.hrs||[]).map(x=>{const L=C?hwLvl(C.hw[hourToZ(x.h)].sc):null;const[,i2]=WXC[x.code]||['','🌡️'];
 return`<div class="hr"><div>${String(x.h).padStart(2,'0')}:00</div><div class="ic">${i2}</div><b>${Math.round(x.t)}°</b><br><small class="sub">☔${x.pop}%</small><br><small class="sub">UV${Math.round(x.uv)}</small>${L!==null?`<div><span class="dot d${L}"></span> <small class="sub">${ZHI[hourToZ(x.h)]}</small></div>`:''}</div>`;}).join('');
 const gears=[['上衣',GEAR.shirt(adv.top),adv.topName,1],['下身',GEAR.pants(adv.bottom),adv.bottomName,1],
 ['遮',GEAR.umb(adv.umbCol),adv.umb==='rain'?'雨遮':adv.umb==='sun'?'太陽遮':'今日唔使',!!adv.umb],
@@ -1522,19 +1521,30 @@ function v3LL(){try{if(LOC){if(Array.isArray(LOC)&&isFinite(LOC[0]))return[+LOC[
 async function v3get(u){const c=window.AbortController?new AbortController():null,tm=setTimeout(()=>c&&c.abort(),12000);
 try{const r=await fetch(u,c?{signal:c.signal}:undefined);if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();}
 catch(e){throw new Error(e.name==='AbortError'?'逾時':(e.message||'網絡錯誤'));}finally{clearTimeout(tm);}}
-async function v3OM(la,lo){const j=await v3get(`https://api.open-meteo.com/v1/forecast?latitude=${la.toFixed(3)}&longitude=${lo.toFixed(3)}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=precipitation_probability,uv_index&daily=temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_probability_max&timezone=auto&forecast_days=2`);
-const c=j.current,H=j.hourly,D=j.daily;if(!c||!H||!D)throw new Error('資料格式唔啱');let i=H.time.findIndex(t=>t.slice(0,13)===String(c.time).slice(0,13));if(i<0)i=0;const nx=H.precipitation_probability.slice(i,i+12).filter(x=>x!=null);
-return{t:c.temperature_2m,feel:c.apparent_temperature,rh:c.relative_humidity_2m,code:c.weather_code,wind:c.wind_speed_10m,uv:H.uv_index[i]||0,uvMax:D.uv_index_max[0]||0,tmax:D.temperature_2m_max[0],tmin:D.temperature_2m_min[0],pop:D.precipitation_probability_max[0]||0,pop12:nx.length?Math.max(...nx):0,src:'Open-Meteo'};}
+async function v3OM(la,lo){const j=await v3get(`https://api.open-meteo.com/v1/forecast?latitude=${la.toFixed(3)}&longitude=${lo.toFixed(3)}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,uv_index,precipitation_probability&daily=uv_index_max,temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=auto&forecast_days=2`);
+const c=j.current,H=j.hourly,D=j.daily;if(!c||!H||!D)throw new Error('資料格式唔啱');
+let i=H.time.findIndex(t=>t.slice(0,13)===String(c.time).slice(0,13));if(i<0)i=0;
+const hrs=[];for(let k=i;k<Math.min(i+12,H.time.length);k++)hrs.push({h:+H.time[k].slice(11,13),code:H.weather_code[k],t:H.temperature_2m[k],pop:H.precipitation_probability[k]??0,uv:H.uv_index[k]??0});
+const today=D.time[0],uvh=H.time.map((t,k)=>[t,H.uv_index[k]]).filter(([t,u])=>t.startsWith(today)&&u>=6),
+uvWin=uvh.length?`${uvh[0][0].slice(11,16)}–${String(+uvh[uvh.length-1][0].slice(11,13)+1).padStart(2,'0')}:00`:'';
+return{lat:la,lon:lo,t:c.temperature_2m,feel:c.apparent_temperature,app:c.apparent_temperature,rh:Math.round(c.relative_humidity_2m),isDay:!!c.is_day,prcp:c.precipitation||0,code:c.weather_code,wind:c.wind_speed_10m,
+uv:Math.round((H.uv_index[i]||0)*10)/10,uvMax:Math.round((D.uv_index_max[0]||0)*10)/10,tmax:D.temperature_2m_max[0],tmin:D.temperature_2m_min[0],
+pop:Math.max(0,...hrs.map(x=>x.pop||0)),pop12:Math.max(0,...hrs.map(x=>x.pop||0)),sunrise:(D.sunrise[0]||'').slice(11,16),sunset:(D.sunset[0]||'').slice(11,16),hrs,uvWin,fetched:Date.now(),src:'Open-Meteo'};}
 const V3WWO={113:0,116:2,119:3,122:3,143:45,248:45,260:45,176:80,263:51,266:53,293:61,296:61,299:63,302:63,305:65,308:65,353:80,356:81,359:82,200:95,386:95,389:95,392:95,395:75,179:71,227:75,230:75,323:71,326:71,329:73,332:73,335:75,338:75,368:85,371:86,182:66,185:66,281:56,284:57,311:66,314:67,317:66,320:71,350:77,362:66,365:67,374:77,377:77};
 async function v3WT(la,lo){const j=await v3get(`https://wttr.in/${la.toFixed(3)},${lo.toFixed(3)}?format=j1`),c=j.current_condition&&j.current_condition[0],d=j.weather&&j.weather[0];if(!c||!d)throw new Error('資料格式唔啱');
-const h=new Date().getHours(),hr=d.hourly,nx=hr.filter(x=>+x.time/100>=h-2).concat(j.weather[1]?j.weather[1].hourly:[]).slice(0,4);
-return{t:+c.temp_C,feel:+c.FeelsLikeC,rh:+c.humidity,code:V3WWO[+c.weatherCode]??3,wind:+c.windspeedKmph,uv:+c.uvIndex||0,uvMax:Math.max(0,...hr.map(x=>+x.uvIndex||0)),tmax:+d.maxtempC,tmin:+d.mintempC,pop:Math.max(0,...hr.map(x=>+x.chanceofrain||0)),pop12:Math.max(0,...nx.map(x=>+x.chanceofrain||0)),src:'wttr.in'};}
+const now=new Date(),h=now.getHours(),all=d.hourly.concat(j.weather[1]?j.weather[1].hourly:[]),nx=all.filter((x,k)=>k>=d.hourly.length||+x.time/100>=h-2).slice(0,4),
+hrs=nx.map(x=>({h:(+x.time/100)%24,code:V3WWO[+x.weatherCode]??3,t:+x.tempC,pop:+x.chanceofrain||0,uv:+x.uvIndex||0})),
+pt=s=>{const m=/(\d+):(\d+)\s*(AM|PM)/i.exec(s||'');if(!m)return'';let H=+m[1]%12;if(/pm/i.test(m[3]))H+=12;return String(H).padStart(2,'0')+':'+m[2];},
+ast=d.astronomy&&d.astronomy[0]||{},sr=pt(ast.sunrise),ss=pt(ast.sunset),hm=String(h).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'),
+uvh=d.hourly.filter(x=>(+x.uvIndex||0)>=6),uvWin=uvh.length?`${String(+uvh[0].time/100).padStart(2,'0')}:00–${String(Math.min(24,+uvh[uvh.length-1].time/100+3)).padStart(2,'0')}:00`:'';
+return{lat:la,lon:lo,t:+c.temp_C,feel:+c.FeelsLikeC,app:+c.FeelsLikeC,rh:+c.humidity,isDay:sr&&ss?(hm>=sr&&hm<ss):(h>=6&&h<18),prcp:+c.precipMM||0,code:V3WWO[+c.weatherCode]??3,wind:+c.windspeedKmph,uv:+c.uvIndex||0,uvMax:Math.max(0,...d.hourly.map(x=>+x.uvIndex||0)),tmax:+d.maxtempC,tmin:+d.mintempC,
+pop:Math.max(0,...d.hourly.map(x=>+x.chanceofrain||0)),pop12:Math.max(0,...hrs.map(x=>x.pop||0)),sunrise:sr,sunset:ss,hrs,uvWin,fetched:Date.now(),src:'wttr.in'};}
 function v3R(){try{renderWeather(CTX);}catch(e){console.error(e);WX=null;WXERR='⚠️ 天氣資料收到，但顯示出錯：'+e.message+'（請將呢句話我知）';try{renderWeather(CTX);}catch(_){}return false;}try{if(CTX&&$('npcText'))npcStart(CTX);}catch(e){}return true;}
 loadWx=async function(){clearTimeout(V3WXT);const ll=v3LL();if(!ll){WXERR='📍 未有位置，請撳重新定位';v3R();return;}
 if(!WX){WXERR='🌤️ 天氣載入中…';v3R();}const errs=[];
 for(const[nm,f]of[['Open-Meteo',v3OM],['wttr.in',v3WT]]){try{const w=await f(ll[0],ll[1]);w._ts=Date.now();WX=w;WXERR='';S_set('v3_wx',JSON.stringify(w));v3R();V3WXT=setTimeout(()=>loadWx(),30*60e3);return;}catch(e){errs.push(nm+'：'+e.message);}}
 const old=JSON.parse(S_get('v3_wx')||'null');
-if(old&&Date.now()-old._ts<6*3600e3){WX=old;WXERR='';v3R();toast('📦 網絡唔穩，暫時顯示 '+new Date(old._ts).toLocaleTimeString('zh-Hant',{hour:'2-digit',minute:'2-digit'})+' 嘅天氣');}
+if(old&&old.hrs&&Date.now()-old._ts<6*3600e3){WX=old;WXERR='';v3R();toast('📦 網絡唔穩，暫時顯示 '+new Date(old._ts).toLocaleTimeString('zh-Hant',{hour:'2-digit',minute:'2-digit'})+' 嘅天氣');}
 else{WX=null;WXERR='⚠️ 天氣載入失敗（'+errs.join('；')+'），1 分鐘後自動再試。';v3R();}
 V3WXT=setTimeout(()=>loadWx(),60e3);};
 
